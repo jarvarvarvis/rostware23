@@ -3,7 +3,7 @@ use serde::Deserialize;
 use super::data::Data;
 
 #[derive(Debug, Deserialize, Eq, PartialEq)]
-#[serde(rename_all = "lowercase")]
+#[serde(rename = "room")]
 pub struct Room {
     #[serde(rename = "@roomId")]
     pub room_id: String,
@@ -25,7 +25,7 @@ mod tests {
             room_id: "TEST_ROOM_ID".to_string(),
             data: data::Data {
                 class: data::DataClass::WelcomeMessage,
-                color: common::Team::One
+                color: Some(common::Team::One)
             }
         };
         let actual = deserialize(welcome_message.to_string()).unwrap();

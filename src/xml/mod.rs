@@ -4,6 +4,7 @@ pub mod common;
 pub mod connection;
 pub mod data;
 pub mod room;
+pub mod state;
 
 use serde::de::DeserializeOwned;
 
