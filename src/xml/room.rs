@@ -26,7 +26,8 @@ mod tests {
             room_id: "TEST_ROOM_ID".to_string(),
             data: data::Data {
                 class: data::DataClass::WelcomeMessage,
-                color: Some(common::Team::One)
+                color: Some(common::Team::One),
+                sent_move: None
             }
         };
         let actual = deserialize(welcome_message).unwrap();
@@ -42,7 +43,8 @@ mod tests {
             room_id: "TEST_ROOM_ID".to_string(),
             data: data::Data {
                 class: data::DataClass::MoveRequest,
-                color: None
+                color: None,
+                sent_move: None
             }
         };
         let actual = deserialize(welcome_message).unwrap();

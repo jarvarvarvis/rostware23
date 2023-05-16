@@ -1,15 +1,17 @@
-use instant_xml::FromXml;
+use instant_xml::{FromXml, ToXml};
 
 use super::common;
+use super::moves;
 
-#[derive(FromXml, Debug, Eq, PartialEq)]
+#[derive(FromXml, ToXml, Debug, Eq, PartialEq)]
 #[xml(scalar, rename_all = "camelCase")]
 pub enum DataClass {
     WelcomeMessage,
-    MoveRequest
+    MoveRequest,
+    Move,
 }
 
-#[derive(FromXml, Debug, Eq, PartialEq)]
+#[derive(FromXml, ToXml, Debug, Eq, PartialEq)]
 #[xml(rename = "data")]
 pub struct Data {
     #[xml(attribute, rename = "class")]
@@ -17,6 +19,8 @@ pub struct Data {
 
     #[xml(attribute, rename = "color")]
     pub color: Option<common::Team>,
+
+    pub sent_move: Option<moves::Move>
 }
 
 #[cfg(test)]
@@ -29,7 +33,8 @@ mod tests {
         let welcome_message = r#"<data class="welcomeMessage" color="ONE"></data>"#;
         let expected = Data {
             class: DataClass::WelcomeMessage,
-            color: Some(common::Team::One)
+            color: Some(common::Team::One),
+            sent_move: None
         };
         let actual = deserialize(welcome_message).unwrap();
         assert_eq!(expected, actual);
@@ -40,7 +45,8 @@ mod tests {
         let welcome_message = r#"<data class="moveRequest"></data>"#;
         let expected = Data {
             class: DataClass::MoveRequest,
-            color: None
+            color: None,
+            sent_move: None
         };
         let actual = deserialize(welcome_message).unwrap();
         assert_eq!(expected, actual);

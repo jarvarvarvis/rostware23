@@ -6,6 +6,7 @@ pub mod connection;
 pub mod data;
 pub mod room;
 pub mod state;
+pub mod moves;
 
 use anyhow::Result;
 use instant_xml::{FromXml, ToXml};
