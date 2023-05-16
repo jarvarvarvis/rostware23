@@ -26,7 +26,23 @@ mod tests {
             room_id: "TEST_ROOM_ID".to_string(),
             data: data::Data {
                 class: data::DataClass::WelcomeMessage,
-                color: common::Team::One
+                color: Some(common::Team::One)
+            }
+        };
+        let actual = deserialize(welcome_message).unwrap();
+        assert_eq!(expected, actual);
+    }
+
+    #[test]
+    fn test_deserialize_move_request() {
+        let welcome_message = r#"<room roomId="TEST_ROOM_ID">
+            <data class="moveRequest"></data>
+        </room>"#;
+        let expected = Room {
+            room_id: "TEST_ROOM_ID".to_string(),
+            data: data::Data {
+                class: data::DataClass::MoveRequest,
+                color: None
             }
         };
         let actual = deserialize(welcome_message).unwrap();
