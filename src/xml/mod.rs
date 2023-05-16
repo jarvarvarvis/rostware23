@@ -1,6 +1,9 @@
 extern crate quick_xml;
 
+pub mod common;
 pub mod connection;
+pub mod data;
+pub mod room;
 
 use serde::de::DeserializeOwned;
 
