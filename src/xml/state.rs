@@ -4,8 +4,9 @@ use super::common;
 
 #[derive(Debug, Deserialize, Eq, PartialEq)]
 #[serde(rename = "startTeam")]
+#[serde(rename_all = "camelCase")]
 pub struct StartTeam {
-    #[serde(rename = "$text")]
+    #[serde(rename = "$value")]
     pub team: common::Team
 }
 
@@ -18,7 +19,7 @@ pub enum FieldState {
 #[derive(Debug, Deserialize, Eq, PartialEq)]
 #[serde(rename = "field")]
 pub struct Field {
-    #[serde(rename = "$text")]
+    #[serde(rename = "$value")]
     field_state: FieldState
 }
 

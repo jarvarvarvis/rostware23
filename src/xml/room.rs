@@ -5,7 +5,7 @@ use super::data::Data;
 #[derive(Debug, Deserialize, Eq, PartialEq)]
 #[serde(rename = "room")]
 pub struct Room {
-    #[serde(rename = "@roomId")]
+    #[serde(rename = "roomId")]
     pub room_id: String,
 
     pub data: Data
