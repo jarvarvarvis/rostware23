@@ -1,12 +1,10 @@
-use serde::{Serialize, Deserialize};
+use instant_xml::FromXml;
 
-#[derive(Debug, Serialize, Deserialize, Eq, PartialEq)]
+#[derive(FromXml, Debug, Eq, PartialEq)]
+#[xml(scalar, rename_all = "UPPERCASE")]
 pub enum Team {
-    #[serde(rename = "ONE")]
     One,
-
-    #[serde(rename = "TWO")]
-    Two
+    Two,
 }
 
 #[cfg(test)]
@@ -16,16 +14,16 @@ mod tests {
 
     #[test]
     fn deserialize_team_inside_other_type() {
-        #[derive(Debug, Deserialize, PartialEq)]
-        #[serde(rename = "test")]
+        #[derive(FromXml, Debug, Eq, PartialEq)]
+        #[xml(rename = "test")]
         struct TestStruct {
-            #[serde(rename = "$value")]
+            #[xml(direct)]
             team: Team
         }
 
         let test_data = "<test>ONE</test>";
         let expected = TestStruct { team: Team::One };
-        let actual = deserialize(test_data.to_string()).unwrap();
+        let actual = deserialize(test_data).unwrap();
         assert_eq!(expected, actual);
     }
 }

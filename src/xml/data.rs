@@ -1,16 +1,20 @@
-use serde::{Serialize, Deserialize};
+use instant_xml::FromXml;
 
 use super::common;
 
-#[derive(Debug, Serialize, Deserialize, Eq, PartialEq)]
-#[serde(rename_all = "camelCase")]
+#[derive(FromXml, Debug, Eq, PartialEq)]
+#[xml(scalar, rename_all = "camelCase")]
 pub enum DataClass {
-    WelcomeMessage,
+    WelcomeMessage
 }
 
-#[derive(Debug, Serialize, Deserialize, Eq, PartialEq)]
+#[derive(FromXml, Debug, Eq, PartialEq)]
+#[xml(rename = "data")]
 pub struct Data {
+    #[xml(attribute, rename = "class")]
     pub class: DataClass,
+
+    #[xml(attribute, rename = "color")]
     pub color: common::Team,
 }
 
@@ -26,7 +30,7 @@ mod tests {
             class: DataClass::WelcomeMessage,
             color: common::Team::One
         };
-        let actual = deserialize(welcome_message.to_string()).unwrap();
+        let actual = deserialize(welcome_message).unwrap();
         assert_eq!(expected, actual);
     }
 }

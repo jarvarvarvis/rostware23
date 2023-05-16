@@ -1,13 +1,14 @@
-use serde::Deserialize;
+use instant_xml::FromXml;
 
 use super::data::Data;
 
-#[derive(Debug, Deserialize, Eq, PartialEq)]
-#[serde(rename = "room")]
+#[derive(FromXml, Debug, Eq, PartialEq)]
+#[xml(rename = "room")]
 pub struct Room {
-    #[serde(rename = "roomId")]
+    #[xml(attribute, rename = "roomId")]
     pub room_id: String,
 
+    #[xml(rename = "data")]
     pub data: Data
 }
 
@@ -28,7 +29,7 @@ mod tests {
                 color: common::Team::One
             }
         };
-        let actual = deserialize(welcome_message.to_string()).unwrap();
+        let actual = deserialize(welcome_message).unwrap();
         assert_eq!(expected, actual);
     }
 }
