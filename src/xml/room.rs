@@ -25,7 +25,7 @@ mod tests {
             room_id: "TEST_ROOM_ID".to_string(),
             data: data::Data {
                 class: data::DataClass::WelcomeMessage,
-                color: Some(common::Team::One)
+                color: common::Team::One
             }
         };
         let actual = deserialize(welcome_message.to_string()).unwrap();
