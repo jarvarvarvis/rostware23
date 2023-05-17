@@ -127,6 +127,10 @@ impl Board {
         new_state.perform_move(performed_move, team)?;
         Ok(new_state)
     }
+
+    pub fn get_penguin_iterator(&self) -> PenguinCollectionIterator {
+        self.penguin_collection.clone().into_iter()
+    }
 }
 
 fn convert_field_to_string(field_state: &FieldState) -> String {

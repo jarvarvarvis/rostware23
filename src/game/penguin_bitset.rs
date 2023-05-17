@@ -85,6 +85,32 @@ impl PenguinBitset {
     }
 }
 
+pub struct PenguinBitsetIterator {
+    bitset: PenguinBitset,
+    penguin_index: u64,
+    team: Team
+}
+
+impl PenguinBitsetIterator {
+    pub fn from(bitset: PenguinBitset, team: Team) -> Self {
+        Self { bitset, penguin_index: 0, team }
+    }
+}
+
+impl Iterator for PenguinBitsetIterator {
+    type Item = Penguin;
+
+    fn next(&mut self) -> Option<Self::Item> {
+        if self.penguin_index < self.bitset.get_penguin_count() {
+            let coordinates = self.bitset.get_coords_at_bitset_index(self.penguin_index);
+            self.penguin_index += 1;
+            self.bitset.get_penguin(coordinates, self.team.clone()).ok()
+        } else {
+            None
+        }
+    }
+}
+
 #[cfg(test)]
 mod tests {
     use super::*;
@@ -178,5 +204,25 @@ mod tests {
         penguin_bitset.add_penguin(penguin.clone());
         penguin_bitset.move_penguin(penguin, Coordinate::new(5, 3)).unwrap();
         assert!(penguin_bitset.get_penguin(coordinate, Team::One).is_err());
+    }
+
+    #[test]
+    fn iterate_empty_penguin_bitset() {
+        let penguin_bitset = PenguinBitset::empty();
+        let mut iterator = PenguinBitsetIterator::from(penguin_bitset, Team::One);
+        assert_eq!(None, iterator.next());
+    }
+
+    #[test]
+    fn iterate_penguin_bitset() {
+        let mut penguin_bitset = PenguinBitset::empty();
+        penguin_bitset.add_penguin(Penguin { coordinate: Coordinate::new(2, 4), team: Team::One });
+        penguin_bitset.add_penguin(Penguin { coordinate: Coordinate::new(3, 1), team: Team::One });
+        penguin_bitset.add_penguin(Penguin { coordinate: Coordinate::new(0, 6), team: Team::One });
+        let mut iterator = PenguinBitsetIterator::from(penguin_bitset, Team::One);
+        assert_eq!(Some(Penguin { coordinate: Coordinate::new(2, 4), team: Team::One }), iterator.next());
+        assert_eq!(Some(Penguin { coordinate: Coordinate::new(3, 1), team: Team::One }), iterator.next());
+        assert_eq!(Some(Penguin { coordinate: Coordinate::new(0, 6), team: Team::One }), iterator.next());
+        assert_eq!(None, iterator.next());
     }
 }
