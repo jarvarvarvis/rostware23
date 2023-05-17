@@ -75,7 +75,7 @@ impl PenguinBitset {
 
     pub fn has_penguin_at(&self, coordinates: Coordinate) -> bool {
         let penguin_count = self.get_penguin_count();
-        for index in 0..=penguin_count {
+        for index in 0..penguin_count {
             if self.get_coords_at_bitset_index(index) == coordinates {
                 return true;
             }
@@ -88,6 +88,34 @@ impl PenguinBitset {
 #[cfg(test)]
 mod tests {
     use super::*;
+
+    #[test]
+    fn penguin_bitset_doesnt_have_penguin_at_0_0_by_default() {
+        let penguin_bitset = PenguinBitset::empty();
+        assert!(!penguin_bitset.has_penguin_at(Coordinate::new(0, 0)));
+    }
+
+    #[test]
+    fn get_coords_at_bitset_index() {
+        let test_bitset = PenguinBitset {
+            value: 0b001001001
+        };
+        let expected = Coordinate::new(3, 1);
+        let actual = test_bitset.get_coords_at_bitset_index(0);
+        assert_eq!(expected, actual);
+    }
+
+    #[test]
+    fn add_penguin_at_pos_of_bitset() {
+        let mut test_bitset = PenguinBitset {
+            value: 0b010010010
+        };
+        let expected = PenguinBitset {
+            value: 0b001001010010010
+        };
+        test_bitset.add_penguin_at_bit_position(Coordinate::new(3, 1), 1);
+        assert_eq!(expected, test_bitset);
+    }
 
     #[test]
     fn add_penguin_at_position_0_0_and_try_get_it_back() {
@@ -114,6 +142,14 @@ mod tests {
         penguin_bitset.add_penguin(Penguin { coordinate: Coordinate::new(3, 7), team: Team::One });
         assert_eq!(1, penguin_bitset.get_penguin_count());
         assert!(!penguin_bitset.has_penguin_at(Coordinate::new(4, 2)));
+    }
+
+    #[test]
+    fn get_penguin_count_of_bitset() {
+        let test_bitset = PenguinBitset {
+            value: 0b001001001
+        };
+        assert_eq!(1, test_bitset.get_penguin_count());
     }
 
     #[test]

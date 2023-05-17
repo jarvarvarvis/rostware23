@@ -53,10 +53,13 @@ impl std::fmt::Display for PenguinCollection {
             }
 
             for x in 0..super::board::BOARD_WIDTH {
-                let penguin = self.get_penguin(Coordinate::new(x, y).odd_r_to_doubled()).unwrap();
-                match penguin.team {
-                    Team::One => write!(f, "1 ")?,
-                    Team::Two => write!(f, "2 ")?,
+                let penguin = self.get_penguin(Coordinate::new(x, y).odd_r_to_doubled());
+                match penguin {
+                    Ok(penguin) => match penguin.team {
+                        Team::One => write!(f, "1 ")?,
+                        Team::Two => write!(f, "2 ")?,
+                    },
+                    Err(_) => write!(f, "_ ")?
                 }
             }
             writeln!(f)?;
