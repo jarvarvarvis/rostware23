@@ -52,7 +52,7 @@ mod tests {
     }
 
     #[test]
-    fn serialize_lay_down_move() {
+    fn serialize_place_move() {
         let r#move = data::Data {
             class: data::DataClass::Move,
             color: None,

@@ -1,5 +1,6 @@
 use crate::xml;
 
+use super::common;
 use super::server::Connection;
 use super::protocol_error::*;
 
@@ -12,7 +13,7 @@ pub enum JoinKind {
 pub struct Protocol {
     pub connection: Connection,
     pub room_id: String,
-    pub own_team: Option<xml::common::Team>
+    pub own_team: Option<common::Team>
 }
 
 impl Protocol {

@@ -1,4 +1,5 @@
-use crate::xml::common::*;
+use super::common::*;
+
 use crate::xml::result::GameResult as XmlGameResult;
 
 #[derive(Debug, Eq, PartialEq)]

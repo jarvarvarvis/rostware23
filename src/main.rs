@@ -17,6 +17,10 @@ fn main() -> anyhow::Result<()> {
         let current_room_message = protocol.read_room_message()?;
         let server_side_message = ServerSideMessage::try_from(current_room_message)?;
 
+        if server_side_message == ServerSideMessage::MoveRequest {
+            
+        }
+
         if let ServerSideMessage::Result(result) = server_side_message {
             println!("Result: {:?}", result);
             protocol.read_protocol_close_tag()?;
