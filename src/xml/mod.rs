@@ -8,6 +8,7 @@ pub mod room;
 pub mod state;
 pub mod moves;
 pub mod result;
+pub mod error;
 
 use anyhow::Result;
 use instant_xml::{FromXml, ToXml};

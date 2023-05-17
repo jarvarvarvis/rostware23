@@ -23,12 +23,12 @@ impl Connection {
     }
 
     pub fn write_string(&mut self, string: String) -> anyhow::Result<()> {
-        self.writer.write(string.as_bytes())?;
+        self.write_buffer(string.as_bytes())?;
         Ok(())
     }
 
     pub fn write_string_slice(&mut self, string: &str) -> anyhow::Result<()> {
-        self.writer.write(string.as_bytes())?;
+        self.write_buffer(string.as_bytes())?;
         Ok(())
     }
 
