@@ -3,7 +3,9 @@ pub use crate::xml::state::FieldState;
 
 use super::moves::*;
 use super::common::*;
-use super::bitset::Bitset8x8;
+use super::board_bitset::*;
+use super::penguin::*;
+use super::penguin_collection::*;
 
 pub const BOARD_WIDTH: u64 = 8;
 pub const BOARD_HEIGHT: u64 = 8;
@@ -12,7 +14,8 @@ pub const BOARD_HEIGHT: u64 = 8;
 pub struct Board {
     if_fish_field_then_fish_count_higher_than_two_otherwise_penguin_team: Bitset8x8,
     if_fish_field_then_fish_modulo_2_otherwise_penguin_count: Bitset8x8,
-    non_zero_fish_count: Bitset8x8
+    non_zero_fish_count: Bitset8x8,
+    penguin_collection: PenguinCollection
 }
 
 fn get_fish_higher_than_two_or_penguin_team_for_field(field_state: &FieldState) -> bool {
@@ -45,6 +48,7 @@ impl Board {
             if_fish_field_then_fish_count_higher_than_two_otherwise_penguin_team: Bitset8x8::empty(),
             if_fish_field_then_fish_modulo_2_otherwise_penguin_count: Bitset8x8::empty(),
             non_zero_fish_count: Bitset8x8::empty(),
+            penguin_collection: PenguinCollection::empty()
         }
     }
 
@@ -63,16 +67,16 @@ impl Board {
     pub fn get(&self, at: Coordinate) -> anyhow::Result<FieldState> {
         let x = at.x() / 2;
         let y = at.y();
-        let is_fish_field = self.non_zero_fish_count.get(x, y)?;
+        let is_fish_field = self.non_zero_fish_count.get(x.into(), y.into())?;
         if is_fish_field {
-            let greater_than_two = self.if_fish_field_then_fish_count_higher_than_two_otherwise_penguin_team.get(x, y)?;
-            let odd = self.if_fish_field_then_fish_modulo_2_otherwise_penguin_count.get(x, y)?;
+            let greater_than_two = self.if_fish_field_then_fish_count_higher_than_two_otherwise_penguin_team.get(x.into(), y.into())?;
+            let odd = self.if_fish_field_then_fish_modulo_2_otherwise_penguin_count.get(x.into(), y.into())?;
             let fish_count = if greater_than_two { 3 } else { 1 } + if odd { 0 } else { 1 };
             return Ok(FieldState::Fish(fish_count));
         }
-        let is_penguin = self.if_fish_field_then_fish_modulo_2_otherwise_penguin_count.get(x, y)?;
+        let is_penguin = self.if_fish_field_then_fish_modulo_2_otherwise_penguin_count.get(x.into(), y.into())?;
         if is_penguin {
-            let penguin_in_team_two = self.if_fish_field_then_fish_count_higher_than_two_otherwise_penguin_team.get(x, y)?;
+            let penguin_in_team_two = self.if_fish_field_then_fish_count_higher_than_two_otherwise_penguin_team.get(x.into(), y.into())?;
             return Ok(FieldState::Team(
                 if penguin_in_team_two { Team::Two } else { Team::One }
             ))
@@ -84,22 +88,30 @@ impl Board {
         let x = at.x() / 2;
         let y = at.y();
         self.if_fish_field_then_fish_count_higher_than_two_otherwise_penguin_team
-            .set(x, y, get_fish_higher_than_two_or_penguin_team_for_field(&field_state))?;
+            .set(x.into(), y.into(), get_fish_higher_than_two_or_penguin_team_for_field(&field_state))?;
         self.if_fish_field_then_fish_modulo_2_otherwise_penguin_count
-            .set(x, y, get_fish_modulo_2_equals_1_or_is_penguin(&field_state))?;
+            .set(x.into(), y.into(), get_fish_modulo_2_equals_1_or_is_penguin(&field_state))?;
         self.non_zero_fish_count
-            .set(x, y, get_non_zero_fish_count(&field_state))?;
+            .set(x.into(), y.into(), get_non_zero_fish_count(&field_state))?;
         Ok(())
     }
     
     fn perform_place_move(&mut self, to: Coordinate, team: Team) -> anyhow::Result<()> {
-        self.set(to, FieldState::Team(team))?;
+        self.set(to.clone(), FieldState::Team(team.clone()))?;
+        self.penguin_collection.add_penguin(Penguin {
+            coordinate: to,
+            team
+        });
         Ok(())
     }
 
     fn perform_normal_move(&mut self, from: Coordinate, to: Coordinate, team: Team) -> anyhow::Result<()> {
-        self.set(from, FieldState::Empty)?;
-        self.set(to, FieldState::Team(team))?;
+        self.set(from.clone(), FieldState::Empty)?;
+        self.set(to.clone(), FieldState::Team(team.clone()))?;
+        self.penguin_collection.move_penguin(Penguin {
+            coordinate: from,
+            team
+        }, to)?;
         Ok(())
     }
 
@@ -164,6 +176,12 @@ impl From<xml::state::Board> for Board {
                 let field_state = &field.0;
 
                 board.set(Coordinate::new(x, y).odd_r_to_doubled(), field_state.clone()).unwrap();
+                if let FieldState::Team(team) = field_state {
+                    board.penguin_collection.add_penguin(Penguin {
+                        coordinate: Coordinate::new(x, y).odd_r_to_doubled(),
+                        team: team.clone()
+                    });
+                }
             }
         }
 
@@ -183,8 +201,6 @@ mod tests {
         let r#move_2 = Move::Place(Coordinate::new(7, 1));
         board = board.with_move_performed(r#move_2, Team::Two).unwrap();
 
-        println!("{}", board);
-     
         assert_eq!(board.get(Coordinate::new(2, 4)).unwrap(), FieldState::Team(Team::One));
         assert_eq!(board.get(Coordinate::new(7, 1)).unwrap(), FieldState::Team(Team::Two));
     }
