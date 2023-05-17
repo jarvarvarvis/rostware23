@@ -9,7 +9,7 @@ pub struct StartTeam {
     pub team: common::Team
 }
 
-#[derive(Debug, Eq, PartialEq)]
+#[derive(Debug, Clone, Eq, PartialEq)]
 pub enum FieldState {
     Empty,
     Fish(u32),
@@ -71,9 +71,9 @@ impl ToXml for FieldState {
     }
 }
 
-#[derive(FromXml, ToXml, Debug, Eq, PartialEq)]
+#[derive(FromXml, ToXml, Clone, Debug, Eq, PartialEq)]
 #[xml(rename = "field")]
-pub struct Field(FieldState);
+pub struct Field(pub FieldState);
 
 #[derive(FromXml, ToXml, Debug, Eq, PartialEq)]
 #[xml(rename = "list")]

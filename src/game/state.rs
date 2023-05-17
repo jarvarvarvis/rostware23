@@ -1,4 +1,5 @@
 use super::common::*;
+use super::board::Board;
 
 use crate::xml;
 
@@ -7,7 +8,8 @@ use std::collections::HashMap;
 #[derive(Debug, PartialEq, Eq)]
 pub struct State {
     pub turn: u32,
-    pub fish_map: HashMap<Team, u32>
+    pub fish_map: HashMap<Team, u32>,
+    pub board: Board
 }
 
 impl From<xml::state::State> for State {
@@ -18,7 +20,8 @@ impl From<xml::state::State> for State {
         ]);
         Self {
             turn: state.turn,
-            fish_map 
+            fish_map,
+            board: Board::from(state.board)
         }
     }
 }
@@ -33,7 +36,16 @@ mod tests {
             turn: 5,
             start_team: xml::common::Team::One,
             board: xml::state::Board {
-                rows: vec![],
+                rows: vec![
+                    xml::state::FieldRow { fields: vec![ xml::state::Field(xml::state::FieldState::Empty); 8 ] },
+                    xml::state::FieldRow { fields: vec![ xml::state::Field(xml::state::FieldState::Empty); 8 ] },
+                    xml::state::FieldRow { fields: vec![ xml::state::Field(xml::state::FieldState::Empty); 8 ] },
+                    xml::state::FieldRow { fields: vec![ xml::state::Field(xml::state::FieldState::Empty); 8 ] },
+                    xml::state::FieldRow { fields: vec![ xml::state::Field(xml::state::FieldState::Empty); 8 ] },
+                    xml::state::FieldRow { fields: vec![ xml::state::Field(xml::state::FieldState::Empty); 8 ] },
+                    xml::state::FieldRow { fields: vec![ xml::state::Field(xml::state::FieldState::Empty); 8 ] },
+                    xml::state::FieldRow { fields: vec![ xml::state::Field(xml::state::FieldState::Empty); 8 ] },
+                ],
             },
             fishes: xml::state::Fishes {
                 entries: vec![
@@ -47,7 +59,8 @@ mod tests {
             fish_map: HashMap::from([
                 (Team::One, 6),
                 (Team::Two, 9)
-            ])
+            ]),
+            board: Board::empty()
         };
         let actual = State::from(state);
         assert_eq!(expected, actual);

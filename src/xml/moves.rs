@@ -6,20 +6,20 @@ use super::common;
 #[xml(rename = "from")]
 pub struct From {
     #[xml(attribute)]
-    pub x: u32,
+    pub x: u64,
 
     #[xml(attribute)]
-    pub y: u32,
+    pub y: u64,
 }
 
 #[derive(FromXml, ToXml, Debug, Eq, PartialEq)]
 #[xml(rename = "to")]
 pub struct To {
     #[xml(attribute)]
-    pub x: u32,
+    pub x: u64,
 
     #[xml(attribute)]
-    pub y: u32,
+    pub y: u64,
 }
 
 #[derive(FromXml, ToXml, Debug, Eq, PartialEq)]

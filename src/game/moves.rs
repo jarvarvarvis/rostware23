@@ -11,11 +11,11 @@ impl From<xml::moves::Move> for Move {
     fn from(xml_move: xml::moves::Move) -> Self {
          if let Some(from) = xml_move.from {
              Self::Normal {
-                from: Coordinate(from.x, from.y),
-                to: Coordinate(xml_move.to.x, xml_move.to.y)
+                from: Coordinate::new(from.x, from.y),
+                to: Coordinate::new(xml_move.to.x, xml_move.to.y)
              }
          } else {
-             Self::Place(Coordinate(xml_move.to.x, xml_move.to.y))
+             Self::Place(Coordinate::new(xml_move.to.x, xml_move.to.y))
          }
     }
 }
@@ -33,8 +33,8 @@ mod tests {
             to: To { x: 4, y: 5 }
         };
         let expected = Move::Normal {
-            from: Coordinate(0, 7),
-            to: Coordinate(4, 5)
+            from: Coordinate::new(0, 7),
+            to: Coordinate::new(4, 5)
         };
         let actual = Move::from(normal_move);
         assert_eq!(expected, actual);
@@ -46,7 +46,7 @@ mod tests {
             from: None,
             to: To { x: 4, y: 3 }
         };
-        let expected = Move::Place(Coordinate(4, 3));
+        let expected = Move::Place(Coordinate::new(4, 3));
         let actual = Move::from(place_move);
         assert_eq!(expected, actual);
     }
