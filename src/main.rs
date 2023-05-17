@@ -18,7 +18,7 @@ fn main() -> anyhow::Result<()> {
         let server_side_message = ServerSideMessage::try_from(current_room_message)?;
 
         if let ServerSideMessage::Memento(state) = &server_side_message {
-            println!("Got current state:\n{:?}", state);
+            println!("Got current state:\n{}", state);
         }
 
         if let ServerSideMessage::Result(result) = &server_side_message {

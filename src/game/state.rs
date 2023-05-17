@@ -26,6 +26,16 @@ impl From<xml::state::State> for State {
     }
 }
 
+impl std::fmt::Display for State {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        write!(f, "Board:\n{}\nCurrent turn: {}, Fish: {} / {}",
+               self.board,
+               self.turn,
+               self.fish_map[&Team::One],
+               self.fish_map[&Team::Two])
+    }
+}
+
 #[cfg(test)]
 mod tests {
     use super::*;
