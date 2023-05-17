@@ -82,12 +82,15 @@ pub struct FishEntry(u32);
 #[derive(FromXml, Debug, Eq, PartialEq)]
 #[xml(rename = "fishes")]
 pub struct Fishes {
-    entries: Vec<FishEntry>
+    pub entries: Vec<FishEntry>
 }
 
 #[derive(FromXml, Debug, Eq, PartialEq)]
 #[xml(rename = "state")]
 pub struct State {
+    #[xml(attribute)]
+    pub turn: u32,
+
     #[xml(rename = "startTeam")]
     pub start_team: common::Team,
     pub board: Board,
@@ -209,7 +212,7 @@ mod tests {
 
     #[test]
     fn deserialize_state() {
-        let board = r#"<state turn="0">
+        let board = r#"<state turn="6">
             <startTeam>ONE</startTeam>
             <board>
                 <list>
@@ -234,6 +237,7 @@ mod tests {
             </fishes>
         </state>"#;
         let expected = State {
+            turn: 6,
             start_team: common::Team::One,
             board: Board {
                 rows: vec![
