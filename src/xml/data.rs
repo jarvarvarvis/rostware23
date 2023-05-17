@@ -1,6 +1,7 @@
 use instant_xml::{FromXml, ToXml};
 
 use super::common;
+use super::state;
 use super::moves;
 use super::result;
 
@@ -23,6 +24,8 @@ pub struct Data {
     #[xml(attribute, rename = "color")]
     pub color: Option<common::Team>,
 
+    pub state: Option<state::State>,
+
     pub sent_move: Option<moves::Move>,
 
     pub result: Option<result::GameResult>
@@ -40,6 +43,7 @@ mod tests {
         let expected = Data {
             class: DataClass::WelcomeMessage,
             color: Some(common::Team::One),
+            state: None,
             sent_move: None,
             result: None
         };
@@ -52,6 +56,7 @@ mod tests {
         let welcome_message = r#"<data class="move"></data>"#;
         let expected = Data {
             class: DataClass::Move,
+            state: None,
             color: None,
             sent_move: None,
             result: None
@@ -65,6 +70,7 @@ mod tests {
         let welcome_message = r#"<data class="memento"></data>"#;
         let expected = Data {
             class: DataClass::Memento,
+            state: None,
             color: None,
             sent_move: None,
             result: None
@@ -78,6 +84,7 @@ mod tests {
         let welcome_message = r#"<data class="result"></data>"#;
         let expected = Data {
             class: DataClass::Result,
+            state: None,
             color: None,
             sent_move: None,
             result: None

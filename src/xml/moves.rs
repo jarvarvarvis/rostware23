@@ -39,6 +39,7 @@ mod tests {
         let r#move = data::Data {
             class: data::DataClass::Move,
             color: None,
+            state: None,
             sent_move: Some(Move {
                 from: Some(From { x: 0, y: 7 }),
                 to: To { x: 4, y: 5 }
@@ -55,6 +56,7 @@ mod tests {
         let r#move = data::Data {
             class: data::DataClass::Move,
             color: None,
+            state: None,
             sent_move: Some(Move {
                 from: None,
                 to: To { x: 3, y: 7 }

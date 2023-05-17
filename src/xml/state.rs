@@ -1,8 +1,8 @@
-use instant_xml::FromXml;
+use instant_xml::{FromXml, ToXml};
 
 use super::common;
 
-#[derive(FromXml, Debug, Eq, PartialEq)]
+#[derive(FromXml, ToXml, Debug, Eq, PartialEq)]
 #[xml(rename = "startTeam")]
 pub struct StartTeam {
     #[xml(direct)]
@@ -59,33 +59,45 @@ impl<'xml> FromXml<'xml> for FieldState {
     const KIND: instant_xml::Kind = instant_xml::Kind::Scalar;
 }
 
-#[derive(FromXml, Debug, Eq, PartialEq)]
+impl ToXml for FieldState {
+    fn serialize<W: std::fmt::Write + ?Sized>(
+        &self,
+        _: Option<instant_xml::Id<'_>>,
+        _: &mut instant_xml::Serializer<W>,
+    ) -> Result<(), instant_xml::Error> {
+        Err(instant_xml::Error::Other(
+                format!("FieldState is not supposed to be serialized")
+        ))
+    }
+}
+
+#[derive(FromXml, ToXml, Debug, Eq, PartialEq)]
 #[xml(rename = "field")]
 pub struct Field(FieldState);
 
-#[derive(FromXml, Debug, Eq, PartialEq)]
+#[derive(FromXml, ToXml, Debug, Eq, PartialEq)]
 #[xml(rename = "list")]
 pub struct FieldRow {
     pub fields: Vec<Field>
 }
 
-#[derive(FromXml, Debug, Eq, PartialEq)]
+#[derive(FromXml, ToXml, Debug, Eq, PartialEq)]
 #[xml(rename = "board")]
 pub struct Board {
     pub rows: Vec<FieldRow>
 }
 
-#[derive(FromXml, Debug, Eq, PartialEq)]
+#[derive(FromXml, ToXml, Debug, Eq, PartialEq)]
 #[xml(rename = "int")]
 pub struct FishEntry(u32);
 
-#[derive(FromXml, Debug, Eq, PartialEq)]
+#[derive(FromXml, ToXml, Debug, Eq, PartialEq)]
 #[xml(rename = "fishes")]
 pub struct Fishes {
     pub entries: Vec<FishEntry>
 }
 
-#[derive(FromXml, Debug, Eq, PartialEq)]
+#[derive(FromXml, ToXml, Debug, Eq, PartialEq)]
 #[xml(rename = "state")]
 pub struct State {
     #[xml(attribute)]

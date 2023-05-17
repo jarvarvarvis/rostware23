@@ -27,6 +27,7 @@ mod tests {
             data: data::Data {
                 class: data::DataClass::WelcomeMessage,
                 color: Some(common::Team::One),
+                state: None,
                 sent_move: None,
                 result: None,
             }
@@ -45,6 +46,7 @@ mod tests {
             data: data::Data {
                 class: data::DataClass::MoveRequest,
                 color: None,
+                state: None,
                 sent_move: None,
                 result: None,
             }

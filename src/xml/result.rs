@@ -281,6 +281,7 @@ mod tests {
         let expected = data::Data {
             class: data::DataClass::Result,
             color: None,
+            state: None,
             sent_move: None,
             result: Some(GameResult {
                 definition: Definition {
