@@ -3,6 +3,13 @@ use instant_xml::{FromXml, ToXml};
 use super::common;
 
 #[derive(FromXml, ToXml, Debug, Eq, PartialEq)]
+#[xml(rename = "winner")]
+pub struct Winner {
+    #[xml(attribute)]
+    pub team: common::Team
+}
+
+#[derive(FromXml, ToXml, Debug, Eq, PartialEq)]
 pub struct GameResult {
     
 }
@@ -13,7 +20,15 @@ mod tests {
     use super::*;
 
     #[test]
-    fn test_deserialize_result() {
+    fn deserialize_winner() {
+        let winner = r#"<winner team="ONE"/>"#;
+        let expected = Winner { team: common::Team::One };
+        let actual = deserialize(winner).unwrap();
+        assert_eq!(expected, actual);
+    }
+
+    #[test]
+    fn deserialize_result() {
         let result = r#"<data class="result">
             <definition>
                 <fragment name="Siegpunkte">
