@@ -12,11 +12,11 @@ pub enum AggregationKind {
 
 #[derive(FromXml, ToXml, Debug, Eq, PartialEq)]
 #[xml(rename = "aggregation")]
-pub struct Aggregation(AggregationKind);
+pub struct Aggregation(pub AggregationKind);
 
 #[derive(FromXml, ToXml, Debug, Eq, PartialEq)]
 #[xml(rename = "relevantForRanking")]
-pub struct RelevantForRanking(bool);
+pub struct RelevantForRanking(pub bool);
 
 #[derive(FromXml, ToXml, Debug, Eq, PartialEq)]
 #[xml(rename = "fragment")]
@@ -24,8 +24,8 @@ pub struct Fragment {
     #[xml(attribute)]
     pub name: String,
 
-    aggregation: Aggregation,
-    relevant_for_ranking: RelevantForRanking
+    pub aggregation: Aggregation,
+    pub relevant_for_ranking: RelevantForRanking
 }
 
 #[derive(FromXml, ToXml, Debug, Eq, PartialEq)]
@@ -47,7 +47,7 @@ pub struct ScoresEntryPlayer {
 
 #[derive(FromXml, ToXml, Debug, Eq, PartialEq)]
 #[xml(rename = "part")]
-pub struct ScorePart(u32);
+pub struct ScorePart(pub u32);
 
 #[derive(FromXml, ToXml, Debug, Eq, PartialEq)]
 #[xml(rename = "score")]
@@ -80,15 +80,15 @@ pub struct Scores {
 #[xml(rename = "winner")]
 pub struct Winner {
     #[xml(attribute)]
-    pub team: common::Team
+    pub team: Option<common::Team>
 }
 
 #[derive(FromXml, ToXml, Debug, Eq, PartialEq)]
 #[xml(transparent)]
 pub struct GameResult {
-    definition: Definition,
-    scores: Scores,
-    winner: Winner
+    pub definition: Definition,
+    pub scores: Scores,
+    pub winner: Winner
 }
 
 #[cfg(test)]
@@ -242,7 +242,7 @@ mod tests {
     #[test]
     fn deserialize_winner() {
         let winner = r#"<winner team="ONE"/>"#;
-        let expected = Winner { team: common::Team::One };
+        let expected = Winner { team: Some(common::Team::One) };
         let actual = deserialize(winner).unwrap();
         assert_eq!(expected, actual);
     }
@@ -324,7 +324,7 @@ mod tests {
                         },
                     ]
                 },
-                winner: Winner { team: common::Team::One }
+                winner: Winner { team: Some(common::Team::One) }
             }),
         };
         let actual = deserialize(result).unwrap();

@@ -1,6 +1,6 @@
 use instant_xml::{FromXml, ToXml};
 
-#[derive(FromXml, ToXml, Debug, Eq, PartialEq)]
+#[derive(FromXml, ToXml, Clone, Copy, Debug, Eq, PartialEq, Hash)]
 #[xml(scalar, rename_all = "UPPERCASE")]
 pub enum Team {
     One,

@@ -63,7 +63,12 @@ impl Protocol {
         let room_message = self.connection.read_string_until_condition(&|text: &str| {
             return text.ends_with("</room>");
         })?;
-        xml::deserialize::<xml::room::Room>(&room_message)
+        let room = xml::deserialize::<xml::room::Room>(&room_message);
+        if room.is_err() {
+            let error = Self::deserialize_error(&room_message)?;
+            anyhow::bail!(ProtocolError::from(error))
+        }
+        Ok(room.unwrap())
     }
 
     pub fn read_welcome_message(&mut self) -> anyhow::Result<()> {
@@ -83,6 +88,13 @@ impl Protocol {
         self.own_team = room.data.color;
         println!("Own team: {:?}", self.own_team);
 
+        Ok(())
+    }
+
+    pub fn read_protocol_close_tag(&mut self) -> anyhow::Result<()> {
+        let _ = self.connection.read_string_until_condition(&|text: &str| {
+            return text.ends_with("</protocol>");
+        })?;
         Ok(())
     }
 }

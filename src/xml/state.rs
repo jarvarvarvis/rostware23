@@ -89,7 +89,7 @@ pub struct Board {
 
 #[derive(FromXml, ToXml, Debug, Eq, PartialEq)]
 #[xml(rename = "int")]
-pub struct FishEntry(u32);
+pub struct FishEntry(pub u32);
 
 #[derive(FromXml, ToXml, Debug, Eq, PartialEq)]
 #[xml(rename = "fishes")]
