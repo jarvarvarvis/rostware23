@@ -16,6 +16,16 @@ pub enum FieldState {
     Team(common::Team)
 }
 
+impl FieldState {
+    pub fn get_fish_count(&self) -> anyhow::Result<u32> {
+        match self {
+            FieldState::Empty => Ok(0),
+            FieldState::Fish(fish_count) => Ok(*fish_count),
+            FieldState::Team(_) => anyhow::bail!("Can't get fish count of player field"),
+        }
+    }
+}
+
 impl<'xml> FromXml<'xml> for FieldState {
     fn matches(id: instant_xml::Id<'_>, field: Option<instant_xml::Id<'_>>) -> bool {
         match field {

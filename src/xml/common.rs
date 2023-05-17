@@ -7,6 +7,15 @@ pub enum Team {
     Two,
 }
 
+impl Team {
+    pub fn opponent(&self) -> Self {
+        match self {
+            Team::One => Team::Two,
+            Team::Two => Team::One,
+        }
+    }
+}
+
 #[cfg(test)]
 mod tests {
     use crate::xml::*;

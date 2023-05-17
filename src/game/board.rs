@@ -194,14 +194,28 @@ mod tests {
     use super::*;
 
     #[test]
-    fn place_move_updates_correct_field() {
+    fn place_moves_update_correct_fields() {
         let mut board = Board::fill(FieldState::Fish(2));
         let r#move_1 = Move::Place(Coordinate::new(2, 4));
         board = board.with_move_performed(r#move_1, Team::One).unwrap();
         let r#move_2 = Move::Place(Coordinate::new(7, 1));
         board = board.with_move_performed(r#move_2, Team::Two).unwrap();
 
+        let mut expected_penguin_collection = PenguinCollection::empty();
+        expected_penguin_collection.add_penguin(Penguin {
+            coordinate: Coordinate::new(2, 4),
+            team: Team::One,
+        }); 
+        expected_penguin_collection.add_penguin(Penguin {
+            coordinate: Coordinate::new(7, 1),
+            team: Team::Two,
+        }); 
+
         assert_eq!(board.get(Coordinate::new(2, 4)).unwrap(), FieldState::Team(Team::One));
         assert_eq!(board.get(Coordinate::new(7, 1)).unwrap(), FieldState::Team(Team::Two));
+
+        assert_eq!(board.get(Coordinate::new(3, 5)).unwrap(), FieldState::Fish(2));
+
+        assert_eq!(expected_penguin_collection, board.penguin_collection);
     }
 }

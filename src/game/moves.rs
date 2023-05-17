@@ -7,6 +7,15 @@ pub enum Move {
     Normal { from: Coordinate, to: Coordinate }
 }
 
+impl Move {
+    pub fn get_to(&self) -> Coordinate {
+        match self {
+            Move::Place(to) => to.clone(),
+            Move::Normal { from, to } => to.clone(),
+        }
+    }
+}
+
 impl From<xml::moves::Move> for Move {
     fn from(xml_move: xml::moves::Move) -> Self {
          if let Some(from) = xml_move.from {
