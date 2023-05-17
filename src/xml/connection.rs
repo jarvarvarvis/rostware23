@@ -33,7 +33,7 @@ mod tests {
     use super::*;
 
     #[test]
-    fn test_serialize_join() {
+    fn serialize_join() {
         let join = Join {};
         let expected = "<join />";
         let actual = serialize(join);
@@ -41,7 +41,7 @@ mod tests {
     }
 
     #[test]
-    fn test_serialize_join_room() {
+    fn serialize_join_room() {
         let join_room = JoinRoom { room_id: "TEST_ROOM_ID".to_string() };
         let expected = r#"<joinRoom roomId="TEST_ROOM_ID"></joinRoom>"#;
         let actual = serialize(join_room);
@@ -49,7 +49,7 @@ mod tests {
     }
 
     #[test]
-    fn test_serialize_join_prepared() {
+    fn serialize_join_prepared() {
         let join_prepared = JoinPrepared { reservation_code: "TEST_RESERVATION_CODE".to_string() };
         let expected = r#"<joinPrepared reservationCode="TEST_RESERVATION_CODE"></joinPrepared>"#;
         let actual = serialize(join_prepared);
@@ -57,7 +57,7 @@ mod tests {
     }
 
     #[test]
-    fn test_deserialize_joined() {
+    fn deserialize_joined() {
         let joined = r#"<joined roomId="TEST_ROOM_ID"></joined>"#;
         let expected = Joined { room_id: "TEST_ROOM_ID".to_string() };
         let actual = deserialize(joined);

@@ -18,7 +18,7 @@ mod tests {
     use super::*;
 
     #[test]
-    fn test_deserialize_welcome_message() {
+    fn deserialize_welcome_message() {
         let welcome_message = r#"<room roomId="TEST_ROOM_ID">
             <data class="welcomeMessage" color="ONE"></data>
         </room>"#;
@@ -36,7 +36,7 @@ mod tests {
     }
 
     #[test]
-    fn test_deserialize_move_request() {
+    fn deserialize_move_request() {
         let welcome_message = r#"<room roomId="TEST_ROOM_ID">
             <data class="moveRequest"></data>
         </room>"#;

@@ -35,7 +35,7 @@ mod tests {
     use super::*;
 
     #[test]
-    fn test_serialize_normal_move() {
+    fn serialize_normal_move() {
         let r#move = data::Data {
             class: data::DataClass::Move,
             color: None,
@@ -51,7 +51,7 @@ mod tests {
     }
 
     #[test]
-    fn test_serialize_lay_down_move() {
+    fn serialize_lay_down_move() {
         let r#move = data::Data {
             class: data::DataClass::Move,
             color: None,

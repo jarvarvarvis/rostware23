@@ -35,7 +35,7 @@ mod tests {
     use super::*;
 
     #[test]
-    fn test_deserialize_data_welcome_message() {
+    fn deserialize_data_welcome_message() {
         let welcome_message = r#"<data class="welcomeMessage" color="ONE"></data>"#;
         let expected = Data {
             class: DataClass::WelcomeMessage,
@@ -48,7 +48,7 @@ mod tests {
     }
 
     #[test]
-    fn test_deserialize_data_move() {
+    fn deserialize_data_move() {
         let welcome_message = r#"<data class="move"></data>"#;
         let expected = Data {
             class: DataClass::Move,
@@ -61,7 +61,7 @@ mod tests {
     }
 
     #[test]
-    fn test_deserialize_data_memento() {
+    fn deserialize_data_memento() {
         let welcome_message = r#"<data class="memento"></data>"#;
         let expected = Data {
             class: DataClass::Memento,
@@ -74,7 +74,7 @@ mod tests {
     }
 
     #[test]
-    fn test_deserialize_data_result() {
+    fn deserialize_data_result() {
         let welcome_message = r#"<data class="result"></data>"#;
         let expected = Data {
             class: DataClass::Result,

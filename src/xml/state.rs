@@ -100,7 +100,7 @@ mod tests {
     use super::*;
 
     #[test]
-    fn test_deserialize_start_team() {
+    fn deserialize_start_team() {
         let start_team = r#"<startTeam>ONE</startTeam>"#;
         let expected = StartTeam { team: common::Team::One };
         let actual = deserialize(start_team).unwrap();
@@ -108,7 +108,7 @@ mod tests {
     }
 
     #[test]
-    fn test_deserialize_field_row_entry_with_0_value() {
+    fn deserialize_field_row_entry_with_0_value() {
         let field_state = "<field>0</field>";
         let expected = Field(FieldState::Empty);
         let actual = deserialize(field_state).unwrap();
@@ -116,7 +116,7 @@ mod tests {
     }
 
     #[test]
-    fn test_deserialize_field_row_entry_with_non_0_value() {
+    fn deserialize_field_row_entry_with_non_0_value() {
         let field_state = "<field>3</field>";
         let expected = Field(FieldState::Fish(3));
         let actual = deserialize(field_state).unwrap();
@@ -124,7 +124,7 @@ mod tests {
     }
 
     #[test]
-    fn test_deserialize_field_row_entry_with_team_one() {
+    fn deserialize_field_row_entry_with_team_one() {
         let field_state = "<field>ONE</field>";
         let expected = Field(FieldState::Team(common::Team::One));
         let actual = deserialize(field_state).unwrap();
@@ -132,7 +132,7 @@ mod tests {
     }
 
     #[test]
-    fn test_deserialize_field_row() {
+    fn deserialize_field_row() {
         let field_row = r#"<list>
             <field>1</field>
             <field>0</field>
@@ -160,7 +160,7 @@ mod tests {
     }
 
     #[test]
-    fn test_deserialize_board() {
+    fn deserialize_board() {
         let board = r#"<board>
             <list>
                 <field>1</field>
@@ -208,7 +208,7 @@ mod tests {
     }
 
     #[test]
-    fn test_deserialize_state() {
+    fn deserialize_state() {
         let board = r#"<state turn="0">
             <startTeam>ONE</startTeam>
             <board>
