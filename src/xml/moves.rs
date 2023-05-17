@@ -42,7 +42,8 @@ mod tests {
             sent_move: Some(Move {
                 from: Some(From { x: 0, y: 7 }),
                 to: To { x: 4, y: 5 }
-            })
+            }),
+            result: None
         };
         let expected = r#"<data class="move"><from x="0" y="7"></from><to x="4" y="5"></to></data>"#;
         let actual = serialize(r#move).unwrap();
@@ -57,7 +58,8 @@ mod tests {
             sent_move: Some(Move {
                 from: None,
                 to: To { x: 3, y: 7 }
-            })
+            }),
+            result: None
         };
         let expected = r#"<data class="move"><to x="3" y="7"></to></data>"#;
         let actual = serialize(r#move).unwrap();

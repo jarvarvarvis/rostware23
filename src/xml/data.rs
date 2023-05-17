@@ -2,6 +2,7 @@ use instant_xml::{FromXml, ToXml};
 
 use super::common;
 use super::moves;
+use super::result;
 
 #[derive(FromXml, ToXml, Debug, Eq, PartialEq)]
 #[xml(scalar, rename_all = "camelCase")]
@@ -22,7 +23,10 @@ pub struct Data {
     #[xml(attribute, rename = "color")]
     pub color: Option<common::Team>,
 
-    pub sent_move: Option<moves::Move>
+    pub sent_move: Option<moves::Move>,
+
+    pub result: Option<result::GameResult>
+
 }
 
 #[cfg(test)]
@@ -36,7 +40,8 @@ mod tests {
         let expected = Data {
             class: DataClass::WelcomeMessage,
             color: Some(common::Team::One),
-            sent_move: None
+            sent_move: None,
+            result: None
         };
         let actual = deserialize(welcome_message).unwrap();
         assert_eq!(expected, actual);
@@ -48,7 +53,8 @@ mod tests {
         let expected = Data {
             class: DataClass::Move,
             color: None,
-            sent_move: None
+            sent_move: None,
+            result: None
         };
         let actual = deserialize(welcome_message).unwrap();
         assert_eq!(expected, actual);
@@ -60,7 +66,8 @@ mod tests {
         let expected = Data {
             class: DataClass::Memento,
             color: None,
-            sent_move: None
+            sent_move: None,
+            result: None
         };
         let actual = deserialize(welcome_message).unwrap();
         assert_eq!(expected, actual);
@@ -72,7 +79,8 @@ mod tests {
         let expected = Data {
             class: DataClass::Result,
             color: None,
-            sent_move: None
+            sent_move: None,
+            result: None
         };
         let actual = deserialize(welcome_message).unwrap();
         assert_eq!(expected, actual);

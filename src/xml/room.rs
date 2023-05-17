@@ -27,7 +27,8 @@ mod tests {
             data: data::Data {
                 class: data::DataClass::WelcomeMessage,
                 color: Some(common::Team::One),
-                sent_move: None
+                sent_move: None,
+                result: None,
             }
         };
         let actual = deserialize(welcome_message).unwrap();
@@ -44,7 +45,8 @@ mod tests {
             data: data::Data {
                 class: data::DataClass::MoveRequest,
                 color: None,
-                sent_move: None
+                sent_move: None,
+                result: None,
             }
         };
         let actual = deserialize(welcome_message).unwrap();
