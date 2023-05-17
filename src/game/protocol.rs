@@ -10,15 +10,17 @@ pub enum JoinKind {
 }
 
 pub struct Protocol {
-    connection: Connection,
-    pub room_id: String
+    pub connection: Connection,
+    pub room_id: String,
+    pub own_team: Option<xml::common::Team>
 }
 
 impl Protocol {
     pub fn from_connection(connection: Connection) -> Self {
         Self {
             connection,
-            room_id: String::new()
+            room_id: String::new(),
+            own_team: None,
         }
     }
 
@@ -44,7 +46,6 @@ impl Protocol {
         // Remove <protocol>\n prefix
         initial_message = initial_message.replace("<protocol>\n", "");
 
-        println!("Received message: {initial_message}");
         let joined = xml::deserialize::<xml::connection::Joined>(&initial_message);
         if joined.is_err() {
             let error = Self::deserialize_error(&initial_message)?;
@@ -52,8 +53,36 @@ impl Protocol {
         }
 
         let joined = joined.unwrap();
+        println!("Joined room with id {}", joined.room_id);
 
         self.room_id = joined.room_id;
+        Ok(())
+    }
+
+    pub fn read_room_message(&mut self) -> anyhow::Result<xml::room::Room> {
+        let room_message = self.connection.read_string_until_condition(&|text: &str| {
+            return text.ends_with("</room>");
+        })?;
+        xml::deserialize::<xml::room::Room>(&room_message)
+    }
+
+    pub fn read_welcome_message(&mut self) -> anyhow::Result<()> {
+        let room = self.read_room_message()?;
+        if room.room_id != self.room_id {
+            anyhow::bail!("Expected room id {}, got {}", self.room_id, room.room_id);
+        }
+
+        if room.data.class != xml::data::DataClass::WelcomeMessage {
+            anyhow::bail!("Expected data class {:?}, got {:?}", xml::data::DataClass::WelcomeMessage, room.data.class);
+        }
+
+        if room.data.color.is_none() {
+            anyhow::bail!("Expected color attribute on welcome message");
+        }
+
+        self.own_team = room.data.color;
+        println!("Own team: {:?}", self.own_team);
+
         Ok(())
     }
 }

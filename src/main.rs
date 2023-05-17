@@ -10,7 +10,7 @@ fn main() -> anyhow::Result<()> {
     let mut protocol = Protocol::from_connection(connection);
     protocol.join_game(JoinKind::Any)?;
     protocol.read_message_after_join()?;
-    println!("Joined room: {}", protocol.room_id);
+    protocol.read_welcome_message()?;
 
     Ok(())
 }
