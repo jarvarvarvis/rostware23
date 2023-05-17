@@ -8,7 +8,9 @@ use super::moves;
 pub enum DataClass {
     WelcomeMessage,
     MoveRequest,
+    Memento,
     Move,
+    Result,
 }
 
 #[derive(FromXml, ToXml, Debug, Eq, PartialEq)]
@@ -29,7 +31,7 @@ mod tests {
     use super::*;
 
     #[test]
-    fn test_deserialize_inner_welcome_message() {
+    fn test_deserialize_data_welcome_message() {
         let welcome_message = r#"<data class="welcomeMessage" color="ONE"></data>"#;
         let expected = Data {
             class: DataClass::WelcomeMessage,
@@ -41,10 +43,34 @@ mod tests {
     }
 
     #[test]
-    fn test_deserialize_inner_move_request() {
-        let welcome_message = r#"<data class="moveRequest"></data>"#;
+    fn test_deserialize_data_move() {
+        let welcome_message = r#"<data class="move"></data>"#;
         let expected = Data {
-            class: DataClass::MoveRequest,
+            class: DataClass::Move,
+            color: None,
+            sent_move: None
+        };
+        let actual = deserialize(welcome_message).unwrap();
+        assert_eq!(expected, actual);
+    }
+
+    #[test]
+    fn test_deserialize_data_memento() {
+        let welcome_message = r#"<data class="memento"></data>"#;
+        let expected = Data {
+            class: DataClass::Memento,
+            color: None,
+            sent_move: None
+        };
+        let actual = deserialize(welcome_message).unwrap();
+        assert_eq!(expected, actual);
+    }
+
+    #[test]
+    fn test_deserialize_data_result() {
+        let welcome_message = r#"<data class="result"></data>"#;
+        let expected = Data {
+            class: DataClass::Result,
             color: None,
             sent_move: None
         };
