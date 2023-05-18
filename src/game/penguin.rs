@@ -26,7 +26,7 @@ impl Iterator for CoordinatesInDirectionIterator {
     fn next(&mut self) -> Option<Self::Item> {
         // Skip the start coordinate.
         // If we would return the previous coordinate instead, PenguinPossibleMoveIterator would
-        // get the start coordinate and fail generating a possible move from that start
+        // get the start coordinate and fail by generating a possible move from that start
         // coordinate to itself, thus yielding no possible moves at all.
         let next_coordinate = self.current_coordinate.add(self.direction.clone().vector());
         if next_coordinate.is_valid() {
