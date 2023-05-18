@@ -167,7 +167,9 @@ impl std::fmt::Display for Board {
                 write!(f, "{}", convert_field_to_string(&field))?;
                 write!(f, "{}", no_field_to_string)?;
             }
-            writeln!(f)?;
+            if y != BOARD_HEIGHT - 1 {
+                writeln!(f)?;
+            }
         }
         Ok(())
     }
