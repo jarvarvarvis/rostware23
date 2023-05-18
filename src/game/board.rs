@@ -7,9 +7,6 @@ use super::board_bitset::*;
 use super::penguin::*;
 use super::penguin_collection::*;
 
-pub const BOARD_WIDTH: u64 = 8;
-pub const BOARD_HEIGHT: u64 = 8;
-
 #[derive(Debug, Clone, PartialEq, Eq)]
 pub struct Board {
     if_fish_field_then_fish_count_higher_than_two_otherwise_penguin_team: Bitset8x8,
@@ -82,6 +79,13 @@ impl Board {
             ))
         }
         Ok(FieldState::Empty)
+    }
+
+    pub fn can_move_to(&self, to: Coordinate) -> anyhow::Result<bool> {
+        match self.get(to.clone())? {
+            FieldState::Fish(_) => Ok(true),
+            _ => anyhow::bail!("Can't move to coordinate {:?}", to)
+        }
     }
 
     pub fn set(&mut self, at: Coordinate, field_state: FieldState) -> anyhow::Result<()> {

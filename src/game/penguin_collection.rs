@@ -47,12 +47,12 @@ impl PenguinCollection {
 
 impl std::fmt::Display for PenguinCollection {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
-        for y in 0..super::board::BOARD_HEIGHT {
+        for y in 0..BOARD_HEIGHT {
             if y % 2 == 1 {
                 write!(f, " ")?;
             }
 
-            for x in 0..super::board::BOARD_WIDTH {
+            for x in 0..BOARD_WIDTH {
                 let penguin = self.get_penguin(Coordinate::new(x, y).odd_r_to_doubled());
                 match penguin {
                     Ok(penguin) => match penguin.team {

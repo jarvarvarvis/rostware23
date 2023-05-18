@@ -1,6 +1,7 @@
 use super::common::*;
 use super::board::Board;
 use super::moves::Move;
+use super::possible_moves::PossibleMovesIterator;
 
 use crate::xml;
 
@@ -15,6 +16,19 @@ pub struct State {
 }
 
 impl State {
+    pub fn from_initial_board(board: Board) -> Self {
+        let fish_map = HashMap::from([
+            (Team::One, 0),
+            (Team::Two, 0)
+        ]);
+        Self {
+            turn: 0,
+            start_team: Team::One,
+            fish_map,
+            board
+        }
+    }
+
     pub fn current_team(&self) -> Team {
         if self.turn % 2 == 0 { 
             self.start_team.clone()
@@ -40,6 +54,10 @@ impl State {
             fish_map: new_fish_map,
             board: new_board
         })
+    }
+
+    pub fn possible_moves(&self) -> PossibleMovesIterator {
+        PossibleMovesIterator::from(self.clone())
     }
 }
 
