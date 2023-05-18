@@ -181,8 +181,8 @@ impl From<xml::state::Board> for Board {
 
         for y in 0..BOARD_HEIGHT {
             for x in 0..BOARD_WIDTH {
-                let board_row = &xml_board.rows[x as usize];
-                let field = &board_row.fields[y as usize];
+                let board_row = &xml_board.rows[y as usize];
+                let field = &board_row.fields[x as usize];
                 let field_state = &field.0;
 
                 board.set(Coordinate::new(x, y).odd_r_to_doubled(), field_state.clone()).unwrap();

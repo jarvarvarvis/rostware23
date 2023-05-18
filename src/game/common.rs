@@ -49,12 +49,6 @@ impl Coordinate {
         Self(x * 2 + y % 2, y)
     }
 
-    pub fn doubled_to_odd_r(self) -> Self {
-        let x = self.x();
-        let y = self.y();
-        Self((x as f32 / 2.0).ceil() as u64 - y % 2, y)
-    }
-
     pub fn is_valid(&self) -> bool {
         let x = self.x();
         let y = self.y();

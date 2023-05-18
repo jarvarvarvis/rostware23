@@ -1,7 +1,7 @@
 use crate::xml;
 use super::common::*;
 
-#[derive(Debug, Eq, PartialEq)]
+#[derive(Debug, Clone, Eq, PartialEq)]
 pub enum Move {
     Place(Coordinate),
     Normal { from: Coordinate, to: Coordinate }
@@ -11,7 +11,7 @@ impl Move {
     pub fn get_to(&self) -> Coordinate {
         match self {
             Move::Place(to) => to.clone(),
-            Move::Normal { from, to } => to.clone(),
+            Move::Normal { from: _, to } => to.clone(),
         }
     }
 }
@@ -26,6 +26,30 @@ impl From<xml::moves::Move> for Move {
          } else {
              Self::Place(Coordinate::new(xml_move.to.x, xml_move.to.y))
          }
+    }
+}
+
+impl Into<xml::moves::Move> for Move {
+    fn into(self) -> xml::moves::Move {
+        match self {
+            Move::Place(to) => xml::moves::Move { 
+                from: None, 
+                to: xml::moves::To {
+                    x: to.x(),
+                    y: to.y()
+                }
+            },
+            Move::Normal { from, to } => xml::moves::Move {
+                from: Some(xml::moves::From {
+                    x: from.x(),
+                    y: from.y()
+                }),
+                to: xml::moves::To {
+                    x: to.x(),
+                    y: to.y()
+                }
+            },
+        }
     }
 }
 

@@ -1,8 +1,8 @@
-use instant_xml::FromXml;
+use instant_xml::{FromXml, ToXml};
 
 use super::data::Data;
 
-#[derive(FromXml, Debug, Eq, PartialEq)]
+#[derive(FromXml, ToXml, Debug, Eq, PartialEq)]
 #[xml(rename = "room")]
 pub struct Room {
     #[xml(attribute, rename = "roomId")]

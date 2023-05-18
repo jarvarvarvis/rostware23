@@ -1,6 +1,7 @@
 use crate::xml;
 
 use super::common;
+use super::moves::Move;
 use super::server::Connection;
 use super::protocol_error::*;
 
@@ -97,5 +98,22 @@ impl Protocol {
             return text.ends_with("</protocol>");
         })?;
         Ok(())
+    }
+
+    pub fn send_move(&mut self, sent_move: Move) -> anyhow::Result<()> {
+        let xml_move: xml::moves::Move = sent_move.into();
+        let sent_room = xml::room::Room {
+            room_id: self.room_id.clone(),
+            data: xml::data::Data {
+                class: xml::data::DataClass::Move,
+                color: None,
+                state: None,
+                sent_move: Some(xml_move),
+                result: None,
+            },
+        };
+        let text = xml::serialize(sent_room)?;
+        self.connection.write_string(text)?;
+        self.connection.flush_writer()
     }
 }
