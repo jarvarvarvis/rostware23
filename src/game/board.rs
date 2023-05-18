@@ -84,7 +84,7 @@ impl Board {
     pub fn can_move_to(&self, to: Coordinate) -> anyhow::Result<bool> {
         match self.get(to.clone())? {
             FieldState::Fish(_) => Ok(true),
-            _ => anyhow::bail!("Can't move to coordinate {:?}", to)
+            _ => Ok(false)
         }
     }
 
@@ -204,10 +204,10 @@ mod tests {
     #[test]
     fn place_moves_update_correct_fields() {
         let mut board = Board::fill(FieldState::Fish(2));
-        let r#move_1 = Move::Place(Coordinate::new(2, 4));
-        board = board.with_move_performed(r#move_1, Team::One).unwrap();
-        let r#move_2 = Move::Place(Coordinate::new(7, 1));
-        board = board.with_move_performed(r#move_2, Team::Two).unwrap();
+        let move_1 = Move::Place(Coordinate::new(2, 4));
+        board.perform_move(move_1, Team::One).unwrap();
+        let move_2 = Move::Place(Coordinate::new(7, 1));
+        board.perform_move(move_2, Team::Two).unwrap();
 
         let mut expected_penguin_collection = PenguinCollection::empty();
         expected_penguin_collection.add_penguin(Penguin {
@@ -225,5 +225,20 @@ mod tests {
         assert_eq!(board.get(Coordinate::new(3, 5)).unwrap(), FieldState::Fish(2));
 
         assert_eq!(expected_penguin_collection, board.penguin_collection);
+    }
+
+    #[test]
+    fn can_move_to_non_player_field() {
+        let mut board = Board::fill(FieldState::Fish(2));
+        board.perform_move(Move::Place(Coordinate::new(0, 0)), Team::One).unwrap();
+        assert!(board.can_move_to(Coordinate::new(1, 3)).unwrap());
+    }
+
+    #[test]
+    fn can_not_move_to_player_field() {
+        let mut board = Board::fill(FieldState::Fish(2));
+        board.perform_move(Move::Place(Coordinate::new(0, 0)), Team::One).unwrap();
+        board.perform_move(Move::Place(Coordinate::new(1, 3)), Team::Two).unwrap();
+        assert!(!board.can_move_to(Coordinate::new(1, 3)).unwrap());
     }
 }
