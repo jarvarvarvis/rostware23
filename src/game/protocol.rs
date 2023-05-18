@@ -93,13 +93,6 @@ impl Protocol {
         Ok(())
     }
 
-    pub fn read_protocol_close_tag(&mut self) -> anyhow::Result<()> {
-        let _ = self.connection.read_string_until_condition(&|text: &str| {
-            return text.ends_with("</protocol>");
-        })?;
-        Ok(())
-    }
-
     pub fn send_move(&mut self, sent_move: Move) -> anyhow::Result<()> {
         let xml_move: xml::moves::Move = sent_move.into();
         let sent_room = xml::room::Room {
