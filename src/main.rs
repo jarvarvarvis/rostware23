@@ -29,6 +29,7 @@ fn main() -> anyhow::Result<()> {
         }
 
         if let ServerSideMessage::MoveRequest = &server_side_message {
+            println!("Got move request");
             if let Some(current_state) = &current_state {
                 let chosen_move = move_getter.get_move(current_state)?;
                 println!("Sending move: {:?}", chosen_move);

@@ -148,8 +148,8 @@ fn convert_field_to_string(field_state: &FieldState) -> String {
             _ => unreachable!()
         },
         FieldState::Team(team) => match team {
-            Team::One => "\u{001B}[32m1",
-            Team::Two => "\u{001B}[35m2",
+            Team::One => "\u{001B}[32mG",
+            Team::Two => "\u{001B}[35mP",
         },
     }.to_string()
 }

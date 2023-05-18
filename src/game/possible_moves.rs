@@ -66,14 +66,14 @@ mod tests {
 
     #[test]
     fn possible_moves_iterator_gives_64_possible_moves_on_all_1_fish_board() {
-        let state = State::from_initial_board(Board::fill(FieldState::Fish(1)));
+        let state = State::from_initial_board_with_start_team_one(Board::fill(FieldState::Fish(1)));
         let possible_moves_iter = PossibleMovesIterator::from(state);
         assert_eq!(64, possible_moves_iter.count());
     }
 
     #[test]
     fn possible_moves_iterator_gives_no_possible_moves_on_empty_board() {
-        let state = State::from_initial_board(Board::empty());
+        let state = State::from_initial_board_with_start_team_one(Board::empty());
         let possible_moves_iter = PossibleMovesIterator::from(state);
         assert_eq!(0, possible_moves_iter.count());
     }
@@ -92,7 +92,7 @@ mod tests {
         board.perform_move(Move::Place(Coordinate::new(4, 2)), Team::Two).unwrap();
         board.perform_move(Move::Place(Coordinate::new(6, 2)), Team::Two).unwrap();
         board.perform_move(Move::Place(Coordinate::new(8, 2)), Team::Two).unwrap();
-        let state = State::from_initial_board(board);
+        let state = State::from_initial_board_with_start_team_one(board);
 
         println!("{}", state);
 
