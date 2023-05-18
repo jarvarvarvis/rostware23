@@ -132,8 +132,8 @@ impl Board {
         Ok(new_state)
     }
 
-    pub fn get_penguin_iterator(&self) -> PenguinCollectionIterator {
-        self.penguin_collection.clone().into_iter()
+    pub fn get_penguin_iterator(&self, team: Team) -> impl Iterator<Item = Penguin> {
+        self.penguin_collection.get_iter_for_team(team)
     }
 }
 

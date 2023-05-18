@@ -43,6 +43,13 @@ impl PenguinCollection {
                                coordinate)
         }
     }
+
+    pub fn get_iter_for_team(&self, team: Team) -> impl Iterator<Item = Penguin> {
+        PenguinBitsetIterator::from(match team {
+            Team::One => self.team_one_penguins.clone(),
+            Team::Two => self.team_two_penguins.clone(),
+        }, team)
+    }
 }
 
 impl std::fmt::Display for PenguinCollection {
@@ -65,56 +72,6 @@ impl std::fmt::Display for PenguinCollection {
             writeln!(f)?;
         }
         Ok(())
-    }
-}
-
-impl IntoIterator for PenguinCollection {
-    type Item = Penguin;
-
-    type IntoIter = PenguinCollectionIterator;
-
-    fn into_iter(self) -> Self::IntoIter {
-        PenguinCollectionIterator::from(self)
-    }
-}
-
-pub struct PenguinCollectionIterator {
-    team_one_penguins_iterator: PenguinBitsetIterator,
-    team_two_penguins_iterator: PenguinBitsetIterator,
-    current_team: Option<Team>
-}
-
-impl From<PenguinCollection> for PenguinCollectionIterator {
-    fn from(collection: PenguinCollection) -> Self {
-        Self {
-            team_one_penguins_iterator: PenguinBitsetIterator::from(collection.team_one_penguins, Team::One),
-            team_two_penguins_iterator: PenguinBitsetIterator::from(collection.team_two_penguins, Team::Two),
-            current_team: Some(Team::One)
-        }
-    }
-}
-
-impl Iterator for PenguinCollectionIterator {
-    type Item = Penguin;
-
-    fn next(&mut self) -> Option<Self::Item> {
-        match self.current_team {
-            Some(Team::One) => match self.team_one_penguins_iterator.next() {
-                Some(penguin) => Some(penguin),
-                None => {
-                    self.current_team = Some(Team::Two);
-                    self.team_two_penguins_iterator.next()
-                },
-            },
-            Some(Team::Two) => match self.team_two_penguins_iterator.next() {
-                Some(penguin) => Some(penguin),
-                None => {
-                    self.current_team = None;
-                    None
-                },
-            },
-            None => None,
-        }
     }
 }
 
@@ -204,20 +161,33 @@ mod tests {
     }
 
     #[test]
-    fn iterate_penguin_collection() {
+    fn iterate_penguin_collection_for_team_one_penguins() {
         let mut penguin_collection = PenguinCollection::empty();
         penguin_collection.add_penguin(Penguin { coordinate: Coordinate::new(2, 4), team: Team::One });
         penguin_collection.add_penguin(Penguin { coordinate: Coordinate::new(0, 6), team: Team::One });
         penguin_collection.add_penguin(Penguin { coordinate: Coordinate::new(2, 0), team: Team::Two });
         penguin_collection.add_penguin(Penguin { coordinate: Coordinate::new(3, 1), team: Team::Two });
         penguin_collection.add_penguin(Penguin { coordinate: Coordinate::new(5, 3), team: Team::One });
-        let mut iterator = penguin_collection.into_iter();
+        let mut iterator = penguin_collection.get_iter_for_team(Team::One);
 
         assert_eq!(Some(Penguin { coordinate: Coordinate::new(2, 4), team: Team::One }), iterator.next());
         assert_eq!(Some(Penguin { coordinate: Coordinate::new(0, 6), team: Team::One }), iterator.next());
         assert_eq!(Some(Penguin { coordinate: Coordinate::new(5, 3), team: Team::One }), iterator.next());
-        assert_eq!(Some(Penguin { coordinate: Coordinate::new(2, 0), team: Team::Two }), iterator.next());
-        assert_eq!(Some(Penguin { coordinate: Coordinate::new(3, 1), team: Team::Two }), iterator.next());
+        assert_eq!(None, iterator.next());
+    }
+
+    #[test]
+    fn iterate_penguin_collection_for_team_two_penguins() {
+        let mut penguin_collection = PenguinCollection::empty();
+        penguin_collection.add_penguin(Penguin { coordinate: Coordinate::new(2, 2), team: Team::One });
+        penguin_collection.add_penguin(Penguin { coordinate: Coordinate::new(2, 6), team: Team::One });
+        penguin_collection.add_penguin(Penguin { coordinate: Coordinate::new(2, 6), team: Team::Two });
+        penguin_collection.add_penguin(Penguin { coordinate: Coordinate::new(3, 5), team: Team::Two });
+        penguin_collection.add_penguin(Penguin { coordinate: Coordinate::new(1, 3), team: Team::One });
+        let mut iterator = penguin_collection.get_iter_for_team(Team::Two);
+
+        assert_eq!(Some(Penguin { coordinate: Coordinate::new(2, 6), team: Team::Two }), iterator.next());
+        assert_eq!(Some(Penguin { coordinate: Coordinate::new(3, 5), team: Team::Two }), iterator.next());
         assert_eq!(None, iterator.next());
     }
 }

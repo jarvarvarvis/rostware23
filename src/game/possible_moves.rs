@@ -26,7 +26,8 @@ impl PossibleMovesIterator {
 
 impl From<State> for PossibleMovesIterator {
     fn from(state: State) -> Self {
-        let penguins_placed = state.board.get_penguin_iterator().count();
+        let team = state.current_team();
+        let penguins_placed = state.board.get_penguin_iterator(team).count();
         if penguins_placed >= MAX_PENGUIN_COUNT_FOR_SINGLE_TEAM {
             unimplemented!("Normal move generation is not implemented") 
         } else {
