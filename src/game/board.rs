@@ -119,7 +119,7 @@ impl Board {
         Ok(())
     }
 
-    fn perform_move(&mut self, performed_move: Move, team: Team) -> anyhow::Result<()> {
+    pub fn perform_move(&mut self, performed_move: Move, team: Team) -> anyhow::Result<()> {
         match performed_move {
             Move::Place(to) => self.perform_place_move(to, team),
             Move::Normal { from, to } => self.perform_normal_move(from, to, team),
@@ -227,6 +227,66 @@ mod tests {
         assert_eq!(board.get(Coordinate::new(3, 5)).unwrap(), FieldState::Fish(2));
 
         assert_eq!(expected_penguin_collection, board.penguin_collection);
+    }
+
+    #[test]
+    fn penguin_collection_iterator_on_updated_board_is_correct() {
+        let mut board = Board::fill(FieldState::Fish(2));
+        let coord_1 = Coordinate::new(2, 4);
+        board.perform_move(Move::Place(coord_1.clone()), Team::One).unwrap();
+        let coord_2 = Coordinate::new(7, 1);
+        board.perform_move(Move::Place(coord_2.clone()), Team::One).unwrap();
+        let move_2 = Move::Place(Coordinate::new(11, 7));
+        board.perform_move(move_2, Team::Two).unwrap();
+
+        let mut penguin_iterator = board.penguin_collection.get_iter_for_team(Team::One);
+        assert_eq!(Penguin { coordinate: coord_1.clone(), team: Team::One }, penguin_iterator.next().unwrap());
+        assert_eq!(Penguin { coordinate: coord_2.clone(), team: Team::One }, penguin_iterator.next().unwrap());
+        assert_eq!(None, penguin_iterator.next());
+    }
+
+    #[test]
+    fn penguin_collection_iterator_on_updated_board_has_correct_size() {
+        let mut board = Board::fill(FieldState::Fish(2));
+        let coord_1 = Coordinate::new(2, 4);
+        board.perform_move(Move::Place(coord_1.clone()), Team::One).unwrap();
+        let coord_2 = Coordinate::new(7, 1);
+        board.perform_move(Move::Place(coord_2.clone()), Team::One).unwrap();
+        let move_2 = Move::Place(Coordinate::new(11, 7));
+        board.perform_move(move_2, Team::Two).unwrap();
+
+        let penguin_iterator = board.penguin_collection.get_iter_for_team(Team::One);
+        assert_eq!(2, penguin_iterator.count());
+    }
+
+    #[test]
+    fn penguin_collection_iterator_on_board_with_all_penguins_is_correct() {
+        let mut board = Board::empty();
+        board.set(Coordinate::new(0, 0), FieldState::Fish(2)).unwrap();
+        board.perform_move(Move::Place(Coordinate::new(2, 0)), Team::One).unwrap();
+        board.perform_move(Move::Place(Coordinate::new(4, 0)), Team::One).unwrap();
+        board.perform_move(Move::Place(Coordinate::new(6, 0)), Team::One).unwrap();
+        board.set(Coordinate::new(8, 0), FieldState::Fish(2)).unwrap();
+        board.perform_move(Move::Place(Coordinate::new(12, 0)), Team::One).unwrap();
+        
+        board.perform_move(Move::Place(Coordinate::new(2, 2)), Team::Two).unwrap();
+        board.perform_move(Move::Place(Coordinate::new(4, 2)), Team::Two).unwrap();
+        board.perform_move(Move::Place(Coordinate::new(6, 2)), Team::Two).unwrap();
+        board.perform_move(Move::Place(Coordinate::new(8, 2)), Team::Two).unwrap();
+        
+        let mut team_one_penguins = board.penguin_collection.get_iter_for_team(Team::One);
+        assert_eq!(Penguin { coordinate: Coordinate::new(2, 0), team: Team::One }, team_one_penguins.next().unwrap());
+        assert_eq!(Penguin { coordinate: Coordinate::new(4, 0), team: Team::One }, team_one_penguins.next().unwrap());
+        assert_eq!(Penguin { coordinate: Coordinate::new(6, 0), team: Team::One }, team_one_penguins.next().unwrap());
+        assert_eq!(Penguin { coordinate: Coordinate::new(12, 0), team: Team::One }, team_one_penguins.next().unwrap());
+        assert_eq!(None, team_one_penguins.next());
+
+        let mut team_two_penguins = board.penguin_collection.get_iter_for_team(Team::Two);
+        assert_eq!(Penguin { coordinate: Coordinate::new(2, 2), team: Team::Two }, team_two_penguins.next().unwrap());
+        assert_eq!(Penguin { coordinate: Coordinate::new(4, 2), team: Team::Two }, team_two_penguins.next().unwrap());
+        assert_eq!(Penguin { coordinate: Coordinate::new(6, 2), team: Team::Two }, team_two_penguins.next().unwrap());
+        assert_eq!(Penguin { coordinate: Coordinate::new(8, 2), team: Team::Two }, team_two_penguins.next().unwrap());
+        assert_eq!(None, team_two_penguins.next());
     }
 
     #[test]

@@ -39,8 +39,8 @@ impl Coordinate {
     }
 
     pub fn add(&self, vector: Vector) -> Self {
-        Self::new((self.x() as i64 + vector.x()).try_into().unwrap(), 
-                  (self.y() as i64 + vector.y()).try_into().unwrap())
+        Self::new((self.x() as i64 + vector.x()) as u64, 
+                  (self.y() as i64 + vector.y()) as u64)
     }
 
     pub fn odd_r_to_doubled(self) -> Self {

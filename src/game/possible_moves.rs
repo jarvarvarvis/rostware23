@@ -1,6 +1,7 @@
-use super::board::{Board, FieldState};
+use super::board::FieldState;
 use super::common::*;
 use super::moves::*;
+use super::penguin::PenguinPossibleMoveIterator;
 use super::state::*;
 
 const MAX_PENGUIN_COUNT_FOR_SINGLE_TEAM: usize = 4;
@@ -10,6 +11,24 @@ pub struct PossibleMovesIterator {
 }
 
 impl PossibleMovesIterator {
+    pub fn from_state_and_team(state: State, team: Team) -> Self {
+        let penguins_placed = state.board.get_penguin_iterator(team).count();
+        if penguins_placed >= MAX_PENGUIN_COUNT_FOR_SINGLE_TEAM {
+            Self::make_normal_moves_iterator_for_team(state, team)
+        } else {
+            Self::make_beginning_place_moves_iterator(state)
+        }
+    }
+
+    fn make_normal_moves_iterator_for_team(state: State, team: Team) -> Self {
+        let penguin_iterator = state.board.get_penguin_iterator(team)
+            .flat_map(move |penguin| PenguinPossibleMoveIterator::from(penguin, state.board.clone()));
+
+        Self {
+            move_iter: Box::new(penguin_iterator)
+        }
+    }
+
     fn make_beginning_place_moves_iterator(state: State) -> Self {
         let board_coordinate_iterator = BoardCoordinateIterator::new();
         let moves = board_coordinate_iterator
@@ -27,12 +46,7 @@ impl PossibleMovesIterator {
 impl From<State> for PossibleMovesIterator {
     fn from(state: State) -> Self {
         let team = state.current_team();
-        let penguins_placed = state.board.get_penguin_iterator(team).count();
-        if penguins_placed >= MAX_PENGUIN_COUNT_FOR_SINGLE_TEAM {
-            unimplemented!("Normal move generation is not implemented") 
-        } else {
-            Self::make_beginning_place_moves_iterator(state)
-        }
+        Self::from_state_and_team(state, team)
     }
 }
 
@@ -46,6 +60,8 @@ impl Iterator for PossibleMovesIterator {
 
 #[cfg(test)]
 mod tests {
+    use crate::game::board::Board;
+
     use super::*;
 
     #[test]
@@ -60,5 +76,32 @@ mod tests {
         let state = State::from_initial_board(Board::empty());
         let possible_moves_iter = PossibleMovesIterator::from(state);
         assert_eq!(0, possible_moves_iter.count());
+    }
+    
+    #[test]
+    fn possible_moves_iterator_gives_correct_moves_on_simple_board() {
+        let mut board = Board::empty();
+        board.set(Coordinate::new(0, 0), FieldState::Fish(2)).unwrap();
+        board.perform_move(Move::Place(Coordinate::new(2, 0)), Team::One).unwrap();
+        board.perform_move(Move::Place(Coordinate::new(4, 0)), Team::One).unwrap();
+        board.perform_move(Move::Place(Coordinate::new(6, 0)), Team::One).unwrap();
+        board.set(Coordinate::new(8, 0), FieldState::Fish(2)).unwrap();
+        board.perform_move(Move::Place(Coordinate::new(12, 0)), Team::One).unwrap();
+        
+        board.perform_move(Move::Place(Coordinate::new(2, 2)), Team::Two).unwrap();
+        board.perform_move(Move::Place(Coordinate::new(4, 2)), Team::Two).unwrap();
+        board.perform_move(Move::Place(Coordinate::new(6, 2)), Team::Two).unwrap();
+        board.perform_move(Move::Place(Coordinate::new(8, 2)), Team::Two).unwrap();
+        let state = State::from_initial_board(board);
+
+        println!("{}", state);
+
+        let mut team_one_possible_moves_iter = PossibleMovesIterator::from_state_and_team(state.clone(), Team::One);
+        assert_eq!(Move::Normal { from: Coordinate::new(2, 0), to: Coordinate::new(0, 0) }, team_one_possible_moves_iter.next().unwrap());
+        assert_eq!(Move::Normal { from: Coordinate::new(6, 0), to: Coordinate::new(8, 0) }, team_one_possible_moves_iter.next().unwrap());
+        assert_eq!(None, team_one_possible_moves_iter.next());
+
+        let mut team_two_possible_moves_iter = PossibleMovesIterator::from_state_and_team(state, Team::Two);
+        assert_eq!(None, team_two_possible_moves_iter.next());
     }
 }

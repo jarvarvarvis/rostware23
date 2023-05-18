@@ -39,7 +39,7 @@ impl PenguinCollection {
             (true, false)  => self.team_one_penguins.get_penguin(coordinate, Team::One),
             (false, true)  => self.team_two_penguins.get_penguin(coordinate, Team::Two),
             (false, false) => anyhow::bail!("No penguin exists at {:?}", coordinate),
-            (true, true) => anyhow::bail!("Penguin collection seems corrupted, penguin of both teams is present at {:?}",
+            (true, true) => anyhow::bail!("Penguin of both teams is present at {:?}",
                                coordinate)
         }
     }
