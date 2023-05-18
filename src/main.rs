@@ -1,20 +1,17 @@
+mod cmdline;
 mod xml;
 mod game;
 mod logic;
 
-use game::server::Connection;
-use game::protocol::{Protocol, JoinKind};
+use cmdline::ClientArgs;
+use game::protocol::Protocol;
 use game::server_side_message::*;
 
 use crate::logic::*;
 use crate::logic::random_getter::RandomGetter;
 
 fn main() -> anyhow::Result<()> {
-    let connection = Connection::connect("127.0.0.1:13050")?;
-    println!("Connection with game server established on port 13050");
-    let mut protocol = Protocol::from_connection(connection);
-    protocol.join_game(JoinKind::Any)?;
-    protocol.read_message_after_join()?;
+    let mut protocol: Protocol = ClientArgs::parse()?.try_into()?;
     protocol.read_welcome_message()?;
 
     let mut current_state = None;
