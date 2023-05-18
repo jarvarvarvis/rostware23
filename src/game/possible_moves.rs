@@ -11,6 +11,12 @@ pub struct PossibleMovesIterator {
 }
 
 impl PossibleMovesIterator {
+    pub fn empty() -> Self {
+        Self {
+            move_iter: Box::new(vec![].into_iter())
+        }
+    }
+
     pub fn from_state_and_team(state: State, team: Team) -> Self {
         let penguins_placed = state.board.get_penguin_iterator(team).count();
         if penguins_placed >= MAX_PENGUIN_COUNT_FOR_SINGLE_TEAM {
@@ -45,8 +51,10 @@ impl PossibleMovesIterator {
 
 impl From<State> for PossibleMovesIterator {
     fn from(state: State) -> Self {
-        let team = state.current_team();
-        Self::from_state_and_team(state, team)
+        match state.current_team() {
+            Ok(team) => Self::from_state_and_team(state, team),
+            Err(_) => Self::empty()
+        }
     }
 }
 
@@ -72,7 +80,7 @@ mod tests {
     }
 
     #[test]
-    fn possible_moves_iterator_gives_no_possible_moves_on_empty_board() {
+    fn possible_moves_iterator_creation_from_state_fails_on_empty_board() {
         let state = State::from_initial_board_with_start_team_one(Board::empty());
         let possible_moves_iter = PossibleMovesIterator::from(state);
         assert_eq!(0, possible_moves_iter.count());

@@ -41,12 +41,16 @@ impl State {
         PossibleMovesIterator::from_state_and_team(self.clone(), team).count() > 0
     }
 
-    pub fn current_team(&self) -> Team {
+    pub fn current_team(&self) -> anyhow::Result<Team> {
         let assumed_current_team = self.turn_based_current_team();
         if !self.has_team_any_moves(assumed_current_team) {
-            assumed_current_team.opponent()
+            let opponent = assumed_current_team.opponent();
+            if !self.has_team_any_moves(opponent) {
+                anyhow::bail!("No current team because neither has valid moves");
+            }
+            Ok(opponent)
         } else {
-            assumed_current_team
+            Ok(assumed_current_team)
         }
     }
 
@@ -57,7 +61,7 @@ impl State {
     pub fn with_move_performed(&self, performed_move: Move) -> anyhow::Result<Self> {
         let target_field = self.board.get(performed_move.get_to())?;
         let added_points = target_field.get_fish_count()?;
-        let current_team = self.turn_based_current_team();
+        let current_team = self.current_team()?;
         let mut new_fish_map = self.fish_map.clone();
         *new_fish_map.get_mut(&current_team).unwrap() += added_points;
         let new_board = self.board.with_move_performed(performed_move, current_team)?;
@@ -142,7 +146,7 @@ mod tests {
     }
 
     #[test]
-    fn get_current_team_on_odd_turn() {
+    fn turn_based_current_team_on_odd_turn() {
         let state = State {
             turn: 7,
             start_team: Team::One,
@@ -156,7 +160,7 @@ mod tests {
     }
 
     #[test]
-    fn get_current_team_on_even_turn() {
+    fn turn_based_current_team_on_even_turn() {
         let state = State {
             turn: 2,
             start_team: Team::One,
@@ -177,6 +181,12 @@ mod tests {
     }
 
     #[test]
+    fn no_current_team_on_empty_state() {
+        let state = State::from_initial_board_with_start_team_one(Board::empty());
+        assert!(state.current_team().is_err());
+    }
+
+    #[test]
     fn current_team_on_even_turn_is_other_team_when_start_team_has_no_moves() {
         let mut board = Board::empty();
         board.perform_move(Move::Place(Coordinate::new(2, 0)), Team::One).unwrap();
@@ -192,11 +202,11 @@ mod tests {
         let mut state = State::from_initial_board_with_start_team_one(board);
         state.turn = 8;
         println!("{}", state);
-        assert_eq!(Team::Two, state.current_team());
+        assert_eq!(Team::Two, state.current_team().unwrap());
     }
 
     #[test]
-    fn perform_move_on_empty_state() {
+    fn perform_move_on_empty_state_doesnt_work() {
         let state = State {
             turn: 0,
             start_team: Team::One,
@@ -207,19 +217,7 @@ mod tests {
             board: Board::empty()
         };
 
-        let expected_board = Board::empty()
-            .with_move_performed(Move::Place(Coordinate::new(5, 7)), Team::One).unwrap();
-        let expected = State {
-            turn: 1,
-            start_team: Team::One,
-            fish_map: HashMap::from([
-                (Team::One, 0),
-                (Team::Two, 0)
-            ]),
-            board: expected_board
-        };
-
-        let actual = state.with_move_performed(Move::Place(Coordinate::new(5, 7))).unwrap();
-        assert_eq!(expected, actual);
+        let result = state.with_move_performed(Move::Place(Coordinate::new(5, 7)));
+        assert!(result.is_err());
     }
 }
