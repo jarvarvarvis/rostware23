@@ -37,8 +37,12 @@ impl State {
         }
     }
 
-    fn has_team_any_moves(&self, team: Team) -> bool {
+    pub fn has_team_any_moves(&self, team: Team) -> bool {
         PossibleMovesIterator::from_state_and_team(self.clone(), team).count() > 0
+    }
+
+    pub fn is_over(&self) -> bool {
+        return !self.has_team_any_moves(Team::One) && !self.has_team_any_moves(Team::Two)
     }
 
     pub fn current_team(&self) -> anyhow::Result<Team> {
@@ -186,6 +190,26 @@ mod tests {
         assert!(state.current_team().is_err());
     }
 
+
+    #[test]
+    fn one_team_has_moves_and_other_team_has_none_on_test_state() {
+        let mut board = Board::empty();
+        board.perform_move(Move::Place(Coordinate::new(2, 0)), Team::One).unwrap();
+        board.perform_move(Move::Place(Coordinate::new(4, 0)), Team::One).unwrap();
+        board.perform_move(Move::Place(Coordinate::new(6, 0)), Team::One).unwrap();
+        board.perform_move(Move::Place(Coordinate::new(12, 0)), Team::One).unwrap();
+
+        board.perform_move(Move::Place(Coordinate::new(2, 2)), Team::Two).unwrap();
+        board.perform_move(Move::Place(Coordinate::new(4, 2)), Team::Two).unwrap();
+        board.perform_move(Move::Place(Coordinate::new(6, 2)), Team::Two).unwrap();
+        board.perform_move(Move::Place(Coordinate::new(8, 2)), Team::Two).unwrap();
+        board.set(Coordinate::new(8, 2), FieldState::Fish(2)).unwrap();
+        
+        let mut state = State::from_initial_board_with_start_team_one(board);
+        assert!(!state.has_team_any_moves(Team::One));
+        assert!(state.has_team_any_moves(Team::Two));
+    }
+
     #[test]
     fn current_team_on_even_turn_is_other_team_when_start_team_has_no_moves() {
         let mut board = Board::empty();
@@ -207,17 +231,14 @@ mod tests {
 
     #[test]
     fn perform_move_on_empty_state_doesnt_work() {
-        let state = State {
-            turn: 0,
-            start_team: Team::One,
-            fish_map: HashMap::from([
-                (Team::One, 0),
-                (Team::Two, 0)
-            ]),
-            board: Board::empty()
-        };
-
+        let state = State::from_initial_board_with_start_team_one(Board::empty());
         let result = state.with_move_performed(Move::Place(Coordinate::new(5, 7)));
         assert!(result.is_err());
+    }
+
+    #[test]
+    fn empty_state_is_over() {
+        let state = State::from_initial_board_with_start_team_one(Board::empty());
+        assert!(state.is_over());
     }
 }
