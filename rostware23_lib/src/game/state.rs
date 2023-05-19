@@ -86,6 +86,19 @@ impl State {
     pub fn possible_moves(&self) -> PossibleMovesIterator {
         PossibleMovesIterator::from(self.clone())
     }
+
+    pub fn with_moveless_player_skipped(&self) -> Self {
+        if self.has_team_any_moves(self.current_team().unwrap()) {
+            return self.clone();
+        }
+        Self {
+            turn: self.turn + 1,
+            start_team: self.start_team,
+            team_one_fish: self.team_one_fish,
+            team_two_fish: self.team_two_fish,
+            board: self.board.clone()
+        }
+    }
 }
 
 impl From<xml::state::State> for State {
@@ -237,5 +250,34 @@ mod tests {
     fn empty_state_is_over() {
         let state = State::from_initial_board_with_start_team_one(Board::empty());
         assert!(state.is_over());
+    }
+
+    #[test]
+    fn given_game_state_with_possible_moves_when_skipping_moveless_player_then_do_nothing() {
+        let mut board = Board::empty();
+        board.set(Coordinate::new(4, 2), FieldState::Fish(1)).unwrap();
+        let state_before = State::from_initial_board_with_start_team_one(board);
+        let state_after = state_before.with_moveless_player_skipped();
+        assert_eq!(state_before, state_after);
+    }
+
+    #[test]
+    fn given_game_state_without_possible_moves_when_skipping_moveless_player_then_change_team_by_only_changing_turn_count() {
+        let mut board = Board::empty();
+        board.perform_move(Move::Place(Coordinate::new(2, 2)), Team::Two).unwrap();
+        board.perform_move(Move::Place(Coordinate::new(4, 2)), Team::Two).unwrap();
+        board.perform_move(Move::Place(Coordinate::new(6, 2)), Team::Two).unwrap();
+        board.perform_move(Move::Place(Coordinate::new(8, 2)), Team::Two).unwrap();
+        board.set(Coordinate::new(10, 2), FieldState::Fish(2)).unwrap();
+        let state_before = State::from_initial_board_with_start_team_one(board.clone());
+        let state_expected = State{
+            turn: 1,
+            board: board,
+            team_one_fish: 0,
+            team_two_fish: 0,
+            start_team: Team::One
+        };
+        let state_after = state_before.with_moveless_player_skipped();
+        assert_eq!(state_expected, state_after);
     }
 }
