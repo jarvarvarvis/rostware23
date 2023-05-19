@@ -43,12 +43,9 @@ impl State {
 
     pub fn current_team(&self) -> anyhow::Result<Team> {
         let assumed_current_team = self.turn_based_current_team();
-        if !self.has_team_any_moves(assumed_current_team) {
-            let opponent = assumed_current_team.opponent();
-            if !self.has_team_any_moves(opponent) {
-                anyhow::bail!("No current team because neither has valid moves");
-            }
-            Ok(opponent)
+        let opponent = assumed_current_team.opponent();
+        if !self.has_team_any_moves(assumed_current_team) && !self.has_team_any_moves(opponent) {
+            anyhow::bail!("No current team because neither has valid moves");
         } else {
             Ok(assumed_current_team)
         }
@@ -211,7 +208,7 @@ mod tests {
     }
 
     #[test]
-    fn current_team_on_even_turn_is_other_team_when_start_team_has_no_moves() {
+    fn current_team_on_even_turn_is_same_team_when_start_team_has_no_moves() {
         let mut board = Board::empty();
         board.perform_move(Move::Place(Coordinate::new(2, 0)), Team::One).unwrap();
         board.perform_move(Move::Place(Coordinate::new(4, 0)), Team::One).unwrap();
@@ -226,7 +223,7 @@ mod tests {
         let mut state = State::from_initial_board_with_start_team_one(board);
         state.turn = 8;
         println!("{}", state);
-        assert_eq!(Team::Two, state.current_team().unwrap());
+        assert_eq!(Team::One, state.current_team().unwrap());
     }
 
     #[test]
