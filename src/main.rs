@@ -28,7 +28,7 @@ fn main() -> anyhow::Result<()> {
         if let ServerSideMessage::MoveRequest = &server_side_message {
             println!("Got move request");
             if let Some(current_state) = &current_state {
-                let chosen_move = move_getter.get_move(&current_state.with_moveless_player_skipped())?;
+                let chosen_move = move_getter.get_move(&current_state.with_moveless_player_skipped()?)?;
                 println!("Sending move: {:?}", chosen_move);
                 protocol.send_move(chosen_move)?;
             }
