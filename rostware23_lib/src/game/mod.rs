@@ -6,6 +6,7 @@ pub mod server_side_message;
 pub mod penguin;
 pub mod penguin_bitset;
 pub mod penguin_collection;
+pub mod board_coordinates;
 pub mod board_bitset;
 pub mod board;
 pub mod move_generator;

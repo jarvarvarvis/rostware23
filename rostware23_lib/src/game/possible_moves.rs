@@ -1,3 +1,4 @@
+use super::board_coordinates::*;
 use super::board::FieldState;
 use super::common::*;
 use super::move_generator::MoveGenerator;
@@ -89,7 +90,7 @@ mod tests {
     }
 
     #[test]
-    fn possible_moves_iterator_creation_from_state_fails_on_empty_board() {
+    fn possible_moves_iterator_gives_no_moves_on_empty_board() {
         let state = State::from_initial_board_with_start_team_one(Board::empty());
         let possible_moves_iter = PossibleMovesIterator::from(state);
         assert_eq!(0, possible_moves_iter.count());
