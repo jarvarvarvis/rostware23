@@ -76,4 +76,26 @@ mod tests {
             }
         }
     }
+
+    #[test]
+    fn given_boards_with_seed_0_to_100_then_at_least_one_board_has_field_with_four_fish() {
+        let mut boards = vec![];
+        for seed in 0..100 {
+            boards.push(create_board_from_seed(seed));
+        }
+
+        for board in boards {
+            for y in 0..BOARD_HEIGHT {
+                for x in 0..BOARD_WIDTH {
+                    let coordinate = Coordinate::new(x, y).odd_r_to_doubled();
+                    let field_state = board.get(coordinate).unwrap();
+                    if field_state == FieldState::Fish(4) {
+                        assert!(true);
+                        return;
+                    }
+                }
+            }
+        }
+        assert!(false);
+    }
 }
