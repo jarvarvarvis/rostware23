@@ -12,5 +12,6 @@ pub mod moves;
 pub mod direction;
 pub mod possible_moves;
 pub mod state;
+pub mod state_generator;
 pub mod result;
 

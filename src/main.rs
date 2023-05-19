@@ -2,6 +2,7 @@ mod cmdline;
 mod xml;
 mod game;
 mod logic;
+mod util;
 
 use cmdline::ClientArgs;
 use game::protocol::Protocol;
