@@ -1,12 +1,11 @@
+extern crate rostware23_lib;
+
 mod cmdline;
-mod xml;
-mod game;
 mod logic;
-mod util;
 
 use cmdline::ClientArgs;
-use game::protocol::Protocol;
-use game::server_side_message::*;
+use rostware23_lib::game::protocol::Protocol;
+use rostware23_lib::game::server_side_message::*;
 
 use crate::logic::*;
 use crate::logic::random_getter::RandomGetter;

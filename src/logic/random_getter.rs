@@ -1,6 +1,6 @@
 extern crate rand;
 
-use crate::game::{moves::Move, state::State};
+use rostware23_lib::game::{moves::Move, state::State};
 
 use super::MoveGetter;
 use anyhow::Context;

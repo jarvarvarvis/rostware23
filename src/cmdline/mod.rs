@@ -6,8 +6,8 @@ use std::env;
 use getopts::Occur;
 use args::Args;
 
-use crate::game::protocol::*;
-use crate::game::server::*;
+use rostware23_lib::game::protocol::*;
+use rostware23_lib::game::server::*;
 
 #[derive(Debug, Clone)]
 pub struct ClientArgs {
