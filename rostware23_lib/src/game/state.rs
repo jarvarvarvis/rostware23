@@ -92,17 +92,17 @@ impl State {
         Generator::get_possible_moves(self.clone())
     }
 
-    pub fn with_moveless_player_skipped(&self) -> Self {
-        if self.has_team_any_moves(self.current_team().unwrap()) {
-            return self.clone();
+    pub fn with_moveless_player_skipped(&self) -> anyhow::Result<Self> {
+        if self.has_team_any_moves(self.current_team()?) {
+            return Ok(self.clone());
         }
-        Self {
+        Ok(Self {
             turn: self.turn + 1,
             start_team: self.start_team,
             team_one_fish: self.team_one_fish,
             team_two_fish: self.team_two_fish,
             board: self.board.clone()
-        }
+        })
     }
 }
 
@@ -262,8 +262,15 @@ mod tests {
         let mut board = Board::empty();
         board.set(Coordinate::new(4, 2), FieldState::Fish(1)).unwrap();
         let state_before = State::from_initial_board_with_start_team_one(board);
-        let state_after = state_before.with_moveless_player_skipped();
+        let state_after = state_before.with_moveless_player_skipped().unwrap();
         assert_eq!(state_before, state_after);
+    }
+
+    #[test]
+    fn empty_state_with_moveless_player_skipped_fails() {
+        let empty_state = State::from_initial_board_with_start_team_one(Board::empty());
+        let state_after = empty_state.with_moveless_player_skipped();
+        assert!(state_after.is_err());
     }
 
     #[test]
@@ -282,7 +289,7 @@ mod tests {
             team_two_fish: 0,
             start_team: Team::One
         };
-        let state_after = state_before.with_moveless_player_skipped();
+        let state_after = state_before.with_moveless_player_skipped().unwrap();
         assert_eq!(state_expected, state_after);
     }
 }
