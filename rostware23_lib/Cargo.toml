@@ -12,3 +12,18 @@ rand = "0.8.5"
 
 instant-xml-macros = "0.3.1"
 instant-xml = "0.3.1"
+
+[dev-dependencies]
+criterion = "0.4"
+
+[[bench]]
+name = "random_state"
+harness = false
+
+[[bench]]
+name = "possible_moves"
+harness = false
+
+[[bench]]
+name = "current_team"
+harness = false

@@ -14,18 +14,3 @@ getopts = "0.2.21"
 rand = "0.8.5"
 
 rostware23_lib = { path = "rostware23_lib" }
-
-[dev-dependencies]
-criterion = "0.4"
-
-[[bench]]
-name = "random_state"
-harness = false
-
-[[bench]]
-name = "possible_moves"
-harness = false
-
-[[bench]]
-name = "current_team"
-harness = false
