@@ -3,6 +3,7 @@ use super::board::Board;
 use super::move_generator::MoveGenerator;
 use super::moves::Move;
 use super::possible_moves::PossibleMovesIterator;
+use super::result::{GameResult, TeamAndPoints};
 
 use crate::xml;
 
@@ -70,18 +71,22 @@ impl State {
         Ok(initial_score)
     }
 
-    pub fn with_move_performed(&self, performed_move: Move) -> anyhow::Result<Self> {
+    pub fn perform_move(&mut self, performed_move: Move) -> anyhow::Result<()> {
         let new_team_one_score = self.score_for_team_after_move(Team::One, &performed_move)?;
         let new_team_two_score = self.score_for_team_after_move(Team::Two, &performed_move)?;
         let current_team = self.current_team()?;
         let new_board = self.board.with_move_performed(performed_move, current_team)?;
-        Ok(Self {
-            turn: self.turn + 1,
-            start_team: self.start_team.clone(),
-            team_one_fish: new_team_one_score,
-            team_two_fish: new_team_two_score,
-            board: new_board
-        })
+        self.turn = self.turn + 1;
+        self.team_one_fish = new_team_one_score;
+        self.team_two_fish = new_team_two_score;
+        self.board = new_board;
+        Ok(())
+    }
+
+    pub fn with_move_performed(&self, performed_move: Move) -> anyhow::Result<Self> {
+        let mut self_clone = self.clone();
+        self_clone.perform_move(performed_move)?;
+        Ok(self_clone)
     }
 
     pub fn possible_moves(&self) -> impl Iterator<Item = Move> {
@@ -102,6 +107,26 @@ impl State {
             team_one_fish: self.team_one_fish,
             team_two_fish: self.team_two_fish,
             board: self.board.clone()
+        })
+    }
+
+    pub fn get_result(&self) -> anyhow::Result<GameResult> {
+        if !self.is_over() {
+            anyhow::bail!("The game state is not over yet");
+        }
+
+        let winner;
+        if self.team_one_fish > self.team_two_fish {
+            winner = Some(Team::One);
+        } else if self.team_two_fish > self.team_one_fish {
+            winner = Some(Team::Two);
+        } else {
+            winner = None
+        }
+
+        Ok(GameResult {
+            winner,
+            points: (TeamAndPoints::new(Team::One, self.team_one_fish), TeamAndPoints::new(Team::Two, self.team_two_fish)),
         })
     }
 }
@@ -218,9 +243,9 @@ mod tests {
         board.perform_move(Move::Place(Coordinate::new(4, 2)), Team::Two).unwrap();
         board.perform_move(Move::Place(Coordinate::new(6, 2)), Team::Two).unwrap();
         board.perform_move(Move::Place(Coordinate::new(8, 2)), Team::Two).unwrap();
-        board.set(Coordinate::new(8, 2), FieldState::Fish(2)).unwrap();
+        board.set(Coordinate::new(10, 2), FieldState::Fish(2)).unwrap();
         
-        let mut state = State::from_initial_board_with_start_team_one(board);
+        let state = State::from_initial_board_with_start_team_one(board);
         assert!(!state.has_team_any_moves(Team::One));
         assert!(state.has_team_any_moves(Team::Two));
     }
@@ -237,7 +262,7 @@ mod tests {
         board.perform_move(Move::Place(Coordinate::new(4, 2)), Team::Two).unwrap();
         board.perform_move(Move::Place(Coordinate::new(6, 2)), Team::Two).unwrap();
         board.perform_move(Move::Place(Coordinate::new(8, 2)), Team::Two).unwrap();
-        board.set(Coordinate::new(8, 2), FieldState::Fish(2)).unwrap();
+        board.set(Coordinate::new(10, 2), FieldState::Fish(2)).unwrap();
         let mut state = State::from_initial_board_with_start_team_one(board);
         state.turn = 8;
         println!("{}", state);
@@ -291,5 +316,62 @@ mod tests {
         };
         let state_after = state_before.with_moveless_player_skipped().unwrap();
         assert_eq!(state_expected, state_after);
+    }
+
+    #[test]
+    fn result_of_empty_state_has_no_winner() {
+        let state = State::from_initial_board_with_start_team_one(Board::empty());
+        let result = state.get_result().unwrap();
+        assert_eq!(None, result.winner);
+        assert_eq!(TeamAndPoints::new(Team::One, 0), result.points.0);
+        assert_eq!(TeamAndPoints::new(Team::Two, 0), result.points.1);
+    }
+
+    #[test]
+    fn result_of_empty_state_with_more_team_one_points_has_team_one_as_winner() {
+        let state = State {
+            turn: 0,
+            start_team: Team::One,
+            team_one_fish: 20,
+            team_two_fish: 0,
+            board: Board::empty()
+        };
+        let result = state.get_result().unwrap();
+        assert_eq!(Some(Team::One), result.winner);
+        assert_eq!(TeamAndPoints::new(Team::One, 20), result.points.0);
+        assert_eq!(TeamAndPoints::new(Team::Two, 0), result.points.1);
+    }
+
+    #[test]
+    fn result_of_empty_state_with_more_team_two_points_has_team_two_as_winner() {
+        let state = State {
+            turn: 0,
+            start_team: Team::One,
+            team_one_fish: 9,
+            team_two_fish: 21,
+            board: Board::empty()
+        };
+        let result = state.get_result().unwrap();
+        assert_eq!(Some(Team::Two), result.winner);
+        assert_eq!(TeamAndPoints::new(Team::One, 9), result.points.0);
+        assert_eq!(TeamAndPoints::new(Team::Two, 21), result.points.1);
+    }
+
+    #[test]
+    fn result_of_not_over_state_is_err() {
+        let mut board = Board::empty();
+        board.perform_move(Move::Place(Coordinate::new(1, 1)), Team::One).unwrap();
+        board.perform_move(Move::Place(Coordinate::new(3, 1)), Team::One).unwrap();
+        board.perform_move(Move::Place(Coordinate::new(5, 1)), Team::One).unwrap();
+        board.perform_move(Move::Place(Coordinate::new(7, 1)), Team::One).unwrap();
+        
+        board.perform_move(Move::Place(Coordinate::new(2, 2)), Team::Two).unwrap();
+        board.perform_move(Move::Place(Coordinate::new(4, 2)), Team::Two).unwrap();
+        board.perform_move(Move::Place(Coordinate::new(6, 2)), Team::Two).unwrap();
+        board.set(Coordinate::new(8, 2), FieldState::Fish(2)).unwrap();
+        let mut state = State::from_initial_board_with_start_team_one(board);
+
+        let result = state.get_result();
+        assert!(result.is_err());
     }
 }
