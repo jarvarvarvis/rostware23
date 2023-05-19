@@ -1,3 +1,4 @@
+pub mod battle;
 pub mod random_getter;
 pub mod pvs_getter;
 

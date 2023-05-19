@@ -1,10 +1,7 @@
 use super::MoveGetter;
+use anyhow::Context;
 use rostware23_lib::game::moves::Move;
-use rostware23_lib::game::common::Coordinate;
-use rostware23_lib::game::board::Board;
 use rostware23_lib::game::state::State;
-use rostware23_lib::game::board::FieldState;
-use rostware23_lib::xml::common::Team;
 
 struct PVSResult {
     best_move: Move,
@@ -19,18 +16,19 @@ impl PVSMoveGetter {
     }
 
     fn pvs(game_state: State) -> anyhow::Result<PVSResult> {
-        let mut best_move = Move::Place(Coordinate::new(17, 9));
+        let mut best_move = None;
         let mut best_score = i32::min_value();
-        let mut possible_moves = game_state.possible_moves();
+        let possible_moves = game_state.possible_moves();
         for current_move in possible_moves {
             let current_score: i32 = game_state.board.get(current_move.get_to())?.get_fish_count()? as i32;
             if current_score > best_score {
-                best_move = current_move.clone();
+                best_move = Some(current_move.clone());
                 best_score = current_score;
             }
         }
+        let best_move = best_move.context("No possible moves on state")?;
         Ok(PVSResult {
-            best_move: best_move,
+            best_move,
             rating: best_score
         })
     }
@@ -45,6 +43,13 @@ impl MoveGetter for PVSMoveGetter {
 #[cfg(test)]
 mod tests {
     use super::*;
+
+    use rostware23_lib::xml::common::Team;
+    use rostware23_lib::game::common::Coordinate;
+    use rostware23_lib::game::board::*;
+
+    use crate::logic::battle::Battle;
+    use crate::logic::random_getter::*;
 
     #[test]
     fn given_game_state_with_option_of_either_one_or_two_fish_when_calculating_move_with_zero_depth_then_choose_more_fish() {
@@ -79,5 +84,14 @@ mod tests {
         let expected_move = Move::Normal{from: moving_penguin_coord, to: expected_target};
         let result_got: PVSResult = PVSMoveGetter::pvs(game_state).unwrap();
         assert_eq!(expected_move, result_got.best_move);
+    }
+
+    #[test]
+    fn pvs_move_getter_wins_most_games_vs_random_move_getter() {
+        let random_getter = RandomGetter::new();
+        let pvs_getter = PVSMoveGetter::new();
+        let playout = Battle::between(&random_getter, &pvs_getter);
+        let result_1 = playout.multiple_bi_directional(3).unwrap();
+        assert!(result_1.winner() == Some(Team::Two));
     }
 }
