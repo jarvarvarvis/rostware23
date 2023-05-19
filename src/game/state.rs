@@ -5,26 +5,22 @@ use super::possible_moves::PossibleMovesIterator;
 
 use crate::xml;
 
-use std::collections::HashMap;
-
 #[derive(Debug, Clone, PartialEq, Eq)]
 pub struct State {
     pub turn: u32,
     pub start_team: Team,
-    pub fish_map: HashMap<Team, u32>,
+    pub team_one_fish: u32,
+    pub team_two_fish: u32,
     pub board: Board
 }
 
 impl State {
     pub fn from_initial_board_with_start_team_one(board: Board) -> Self {
-        let fish_map = HashMap::from([
-            (Team::One, 0),
-            (Team::Two, 0)
-        ]);
         Self {
             turn: 0,
             start_team: Team::One,
-            fish_map,
+            team_one_fish: 0,
+            team_two_fish: 0,
             board
         }
     }
@@ -59,20 +55,33 @@ impl State {
     }
 
     pub fn score_of_team(&self, team: Team) -> u32 {
-        self.fish_map[&team]
+        match team {
+            Team::One => self.team_one_fish,
+            Team::Two => self.team_two_fish
+        }
     }
 
-    pub fn with_move_performed(&self, performed_move: Move) -> anyhow::Result<Self> {
+    fn score_for_team_after_move(&self, score_team: Team, performed_move: &Move) -> anyhow::Result<u32> {
         let target_field = self.board.get(performed_move.get_to())?;
         let added_points = target_field.get_fish_count()?;
         let current_team = self.current_team()?;
-        let mut new_fish_map = self.fish_map.clone();
-        *new_fish_map.get_mut(&current_team).unwrap() += added_points;
+        let initial_score = self.score_of_team(score_team);
+        if score_team == current_team {
+            return Ok(initial_score + added_points);
+        }
+        Ok(initial_score)
+    }
+
+    pub fn with_move_performed(&self, performed_move: Move) -> anyhow::Result<Self> {
+        let new_team_one_score = self.score_for_team_after_move(Team::One, &performed_move)?;
+        let new_team_two_score = self.score_for_team_after_move(Team::Two, &performed_move)?;
+        let current_team = self.current_team()?;
         let new_board = self.board.with_move_performed(performed_move, current_team)?;
         Ok(Self {
             turn: self.turn + 1,
             start_team: self.start_team.clone(),
-            fish_map: new_fish_map,
+            team_one_fish: new_team_one_score,
+            team_two_fish: new_team_two_score,
             board: new_board
         })
     }
@@ -84,14 +93,11 @@ impl State {
 
 impl From<xml::state::State> for State {
     fn from(state: xml::state::State) -> Self {
-        let fish_map = HashMap::from([
-            (Team::One, state.fishes.entries[0].0),
-            (Team::Two, state.fishes.entries[1].0)
-        ]);
         Self {
             turn: state.turn,
             start_team: state.start_team,
-            fish_map,
+            team_one_fish: state.fishes.entries[0].0,
+            team_two_fish: state.fishes.entries[1].0,
             board: Board::from(state.board)
         }
     }
@@ -102,8 +108,8 @@ impl std::fmt::Display for State {
         write!(f, "Board:\n{}\nCurrent turn: {}, Fish: {} / {}",
                self.board,
                self.turn,
-               self.fish_map[&Team::One],
-               self.fish_map[&Team::Two])
+               self.score_of_team(Team::One),
+               self.score_of_team(Team::Two))
     }
 }
 
@@ -139,10 +145,8 @@ mod tests {
         let expected = State {
             turn: 5,
             start_team: Team::One,
-            fish_map: HashMap::from([
-                (Team::One, 6),
-                (Team::Two, 9)
-            ]),
+            team_one_fish: 6,
+            team_two_fish: 9,
             board: Board::empty()
         };
         let actual = State::from(state);
@@ -154,10 +158,8 @@ mod tests {
         let state = State {
             turn: 7,
             start_team: Team::One,
-            fish_map: HashMap::from([
-                (Team::One, 0),
-                (Team::Two, 0)
-            ]),
+            team_one_fish: 0,
+            team_two_fish: 0,
             board: Board::empty()
         };
         assert_eq!(Team::Two, state.turn_based_current_team());
@@ -168,10 +170,8 @@ mod tests {
         let state = State {
             turn: 2,
             start_team: Team::One,
-            fish_map: HashMap::from([
-                (Team::One, 0),
-                (Team::Two, 0)
-            ]),
+            team_one_fish: 0,
+            team_two_fish: 0,
             board: Board::empty()
         };
         assert_eq!(Team::One, state.turn_based_current_team());
