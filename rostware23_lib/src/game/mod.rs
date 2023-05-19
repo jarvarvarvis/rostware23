@@ -8,6 +8,7 @@ pub mod penguin_bitset;
 pub mod penguin_collection;
 pub mod board_bitset;
 pub mod board;
+pub mod move_generator;
 pub mod moves;
 pub mod direction;
 pub mod possible_moves;

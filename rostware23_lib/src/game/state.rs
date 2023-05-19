@@ -1,5 +1,6 @@
 use super::common::*;
 use super::board::Board;
+use super::move_generator::MoveGenerator;
 use super::moves::Move;
 use super::possible_moves::PossibleMovesIterator;
 
@@ -83,8 +84,12 @@ impl State {
         })
     }
 
-    pub fn possible_moves(&self) -> PossibleMovesIterator {
-        PossibleMovesIterator::from(self.clone())
+    pub fn possible_moves(&self) -> impl Iterator<Item = Move> {
+        self.possible_moves_by_move_generator::<PossibleMovesIterator>()
+    }
+
+    pub fn possible_moves_by_move_generator<Generator: MoveGenerator>(&self) -> impl Iterator<Item = Move> {
+        Generator::get_possible_moves(self.clone())
     }
 
     pub fn with_moveless_player_skipped(&self) -> Self {
@@ -272,7 +277,7 @@ mod tests {
         let state_before = State::from_initial_board_with_start_team_one(board.clone());
         let state_expected = State{
             turn: 1,
-            board: board,
+            board,
             team_one_fish: 0,
             team_two_fish: 0,
             start_team: Team::One

@@ -1,5 +1,6 @@
 use super::board::FieldState;
 use super::common::*;
+use super::move_generator::MoveGenerator;
 use super::moves::*;
 use super::penguin::PenguinPossibleMoveIterator;
 use super::state::*;
@@ -63,6 +64,14 @@ impl Iterator for PossibleMovesIterator {
 
     fn next(&mut self) -> Option<Self::Item> {
         self.move_iter.next()
+    }
+}
+
+impl MoveGenerator for PossibleMovesIterator {
+    type MoveIterator = PossibleMovesIterator;
+
+    fn get_possible_moves(state: State) -> Self::MoveIterator {
+        PossibleMovesIterator::from(state)
     }
 }
 
