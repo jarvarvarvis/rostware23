@@ -27,3 +27,7 @@ harness = false
 [[bench]]
 name = "current_team"
 harness = false
+
+[[bench]]
+name = "possible_moves_for_team_one"
+harness = false
