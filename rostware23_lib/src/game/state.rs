@@ -48,11 +48,7 @@ impl State {
     pub fn current_team(&self) -> anyhow::Result<Team> {
         let assumed_current_team = self.turn_based_current_team();
         let opponent = assumed_current_team.opponent();
-        if !self.has_team_any_moves(assumed_current_team) && !self.has_team_any_moves(opponent) {
-            anyhow::bail!("No current team because neither has valid moves");
-        } else {
-            Ok(assumed_current_team)
-        }
+        Ok(assumed_current_team)
     }
 
     pub fn score_of_team(&self, team: Team) -> u32 {
@@ -103,13 +99,16 @@ impl State {
         if self.has_team_any_moves(self.current_team()?) {
             return Ok(self.clone());
         }
-        Ok(Self {
-            turn: self.turn + 1,
-            start_team: self.start_team,
-            team_one_fish: self.team_one_fish,
-            team_two_fish: self.team_two_fish,
-            board: self.board.clone()
-        })
+        if self.has_team_any_moves(self.current_team()?.opponent()) {
+            return Ok(Self {
+                turn: self.turn + 1,
+                start_team: self.start_team,
+                team_one_fish: self.team_one_fish,
+                team_two_fish: self.team_two_fish,
+                board: self.board.clone()
+            });
+        }
+        anyhow::bail!("Can't skip moveless player when nobody has moves");
     }
 
     pub fn get_result(&self) -> anyhow::Result<GameResult> {
@@ -227,9 +226,9 @@ mod tests {
     }
 
     #[test]
-    fn no_current_team_on_empty_state() {
+    fn team_one_on_empty_state() {
         let state = State::from_initial_board_with_start_team_one(Board::empty());
-        assert!(state.current_team().is_err());
+        assert_eq!(Team::One, state.current_team().unwrap());
     }
 
 
@@ -272,10 +271,10 @@ mod tests {
     }
 
     #[test]
-    fn perform_move_on_empty_state_doesnt_work() {
+    fn perform_move_on_empty_state_does_work_due_to_no_error_checking() {
         let state = State::from_initial_board_with_start_team_one(Board::empty());
         let result = state.with_move_performed(Move::Place(Coordinate::new(5, 7)));
-        assert!(result.is_err());
+        assert!(result.is_ok());
     }
 
     #[test]
