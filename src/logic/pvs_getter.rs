@@ -48,7 +48,7 @@ impl PVSMoveGetter {
 
 impl MoveGetter for PVSMoveGetter {
     fn get_move(&self, state: &State) -> anyhow::Result<Move> {
-        Self::pvs(state.clone(), 0, INITIAL_LOWER_BOUND, INITIAL_UPPER_BOUND).map(|result| result.best_move.unwrap())
+        Self::pvs(state.clone(), 1, INITIAL_LOWER_BOUND, INITIAL_UPPER_BOUND).map(|result| result.best_move.unwrap())
     }
 }
 
@@ -150,5 +150,20 @@ mod tests {
         let expected_move = Move::Normal{from: moving_penguin_coord, to: expected_target};
         let result_got: PVSResult = PVSMoveGetter::pvs(game_state, 2, 0, 2).unwrap();
         assert_eq!(2, result_got.rating);
+    }
+
+    #[test]
+    fn can_predict_move_with_higher_depth_when_opponent_doesnt_have_any_moves() {
+        let mut board = Board::empty();
+        for i in 0..5 {
+            board.perform_move(Move::Place(Coordinate::new(i*2, 0)), Team::One).unwrap();
+            board.perform_move(Move::Place(Coordinate::new(i*2, 4)), Team::Two).unwrap();
+        }
+        board.set(Coordinate::new(10, 0), FieldState::Fish(2)).unwrap();
+        board.set(Coordinate::new(11, 1), FieldState::Fish(2)).unwrap();
+        let expected_move = Move::Normal{from: Coordinate::new(8, 0), to: Coordinate::new(10, 0)};
+        let game_state = State::from_initial_board_with_start_team_one(board);
+        let result_got: PVSResult = PVSMoveGetter::pvs(game_state, 2, INITIAL_LOWER_BOUND, INITIAL_UPPER_BOUND).unwrap();
+        assert_eq!(expected_move, result_got.best_move.unwrap());
     }
 }
