@@ -19,7 +19,7 @@ impl PVSMoveGetter {
         if depth < 0 {
             return Ok(PVSResult {
                 best_move: None,
-                rating: game_state.score_of_team(game_state.current_team()?) as i32 - game_state.score_of_team(game_state.current_team()?.opponent()) as i32
+                rating: game_state.score_of_team(game_state.current_team()) as i32 - game_state.score_of_team(game_state.current_team().opponent()) as i32
             });
         }
         let mut best_move = None;

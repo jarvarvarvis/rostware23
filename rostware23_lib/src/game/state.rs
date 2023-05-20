@@ -45,10 +45,10 @@ impl State {
         return !self.has_team_any_moves(Team::One) && !self.has_team_any_moves(Team::Two)
     }
 
-    pub fn current_team(&self) -> anyhow::Result<Team> {
+    pub fn current_team(&self) -> Team {
         let assumed_current_team = self.turn_based_current_team();
         let opponent = assumed_current_team.opponent();
-        Ok(assumed_current_team)
+        assumed_current_team
     }
 
     pub fn score_of_team(&self, team: Team) -> u32 {
@@ -61,7 +61,7 @@ impl State {
     fn score_for_team_after_move(&self, score_team: Team, performed_move: &Move) -> anyhow::Result<u32> {
         let target_field = self.board.get(performed_move.get_to())?;
         let added_points = target_field.get_fish_count()?;
-        let current_team = self.current_team()?;
+        let current_team = self.current_team();
         let initial_score = self.score_of_team(score_team);
         if score_team == current_team {
             return Ok(initial_score + added_points);
@@ -72,7 +72,7 @@ impl State {
     pub fn perform_move(&mut self, performed_move: Move) -> anyhow::Result<()> {
         let new_team_one_score = self.score_for_team_after_move(Team::One, &performed_move)?;
         let new_team_two_score = self.score_for_team_after_move(Team::Two, &performed_move)?;
-        let current_team = self.current_team()?;
+        let current_team = self.current_team();
         let new_board = self.board.with_move_performed(performed_move, current_team)?;
         self.turn = self.turn + 1;
         self.team_one_fish = new_team_one_score;
@@ -96,10 +96,10 @@ impl State {
     }
 
     pub fn with_moveless_player_skipped(&self) -> anyhow::Result<Self> {
-        if self.has_team_any_moves(self.current_team()?) {
+        if self.has_team_any_moves(self.current_team()) {
             return Ok(self.clone());
         }
-        if self.has_team_any_moves(self.current_team()?.opponent()) {
+        if self.has_team_any_moves(self.current_team().opponent()) {
             return Ok(Self {
                 turn: self.turn + 1,
                 start_team: self.start_team,
@@ -228,7 +228,7 @@ mod tests {
     #[test]
     fn team_one_on_empty_state() {
         let state = State::from_initial_board_with_start_team_one(Board::empty());
-        assert_eq!(Team::One, state.current_team().unwrap());
+        assert_eq!(Team::One, state.current_team());
     }
 
 
@@ -267,7 +267,7 @@ mod tests {
         let mut state = State::from_initial_board_with_start_team_one(board);
         state.turn = 8;
         println!("{}", state);
-        assert_eq!(Team::One, state.current_team().unwrap());
+        assert_eq!(Team::One, state.current_team());
     }
 
     #[test]

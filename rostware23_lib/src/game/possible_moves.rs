@@ -53,10 +53,8 @@ impl PossibleMovesIterator {
 
 impl From<State> for PossibleMovesIterator {
     fn from(state: State) -> Self {
-        match state.current_team() {
-            Ok(team) => Self::from_state_and_team(state, team),
-            Err(_) => Self::empty()
-        }
+        let team = state.current_team();
+        Self::from_state_and_team(state, team)
     }
 }
 
