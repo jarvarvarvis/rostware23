@@ -92,6 +92,6 @@ mod tests {
         let pvs_getter = PVSMoveGetter::new();
         let playout = Battle::between(&random_getter, &pvs_getter);
         let result_1 = playout.multiple_bi_directional(3).unwrap();
-        assert!(result_1.winner() == Some(Team::Two));
+        assert_eq!(result_1.winner(), Some(Team::Two));
     }
 }
