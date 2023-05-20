@@ -19,11 +19,11 @@ impl PVSMoveGetter {
         if depth < 0 {
             return Ok(PVSResult {
                 best_move: None,
-                rating: -(game_state.score_of_team(game_state.current_team()?.opponent()) as i32)
+                rating: game_state.score_of_team(game_state.current_team()?) as i32 - game_state.score_of_team(game_state.current_team()?.opponent()) as i32
             });
         }
         let mut best_move = None;
-        let mut best_score = i32::min_value();
+        let mut best_score = -1000000;
         let possible_moves = game_state.possible_moves();
         for current_move in possible_moves {
             let next_game_state = game_state.with_move_performed(current_move.clone())?;
@@ -102,7 +102,7 @@ mod tests {
     }
 
     #[test]
-    fn given_game_state_with_option_of_either_one_then_four_or_two_then_one_fish_and_also_one_fish_for_opponent_when_selecting_best_move_with_depth_one_then_choose_one_to_screw_opponent() {
+    fn given_game_state_with_option_of_either_one_then_four_or_two_then_one_fish_and_also_one_fish_for_opponent_when_selecting_best_move_with_depth_two_then_choose_one_to_gain_fish() {
         let mut board = Board::empty();
         let moving_penguin_coord = Coordinate::new(12, 0);
         let expected_target = Coordinate::new(10, 0);
@@ -115,9 +115,10 @@ mod tests {
         board.set(Coordinate::new(15, 1), FieldState::Fish(1)).unwrap();
         board.set(Coordinate::new(9, 1), FieldState::Fish(4)).unwrap();
         board.set(Coordinate::new(4, 4), FieldState::Fish(1)).unwrap();
+        board.set(Coordinate::new(5, 5), FieldState::Fish(1)).unwrap();
         let game_state = State::from_initial_board_with_start_team_one(board);
         let expected_move = Move::Normal{from: moving_penguin_coord, to: expected_target};
-        let result_got: PVSResult = PVSMoveGetter::pvs(game_state, 1).unwrap();
+        let result_got: PVSResult = PVSMoveGetter::pvs(game_state, 2).unwrap();
         assert_eq!(expected_move, result_got.best_move.unwrap());
     }
 }
