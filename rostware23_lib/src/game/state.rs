@@ -36,7 +36,9 @@ impl State {
     }
 
     pub fn has_team_any_moves(&self, team: Team) -> bool {
-        PossibleMovesIterator::from_state_and_team(self.clone(), team).count() > 0
+        PossibleMovesIterator::from_state_and_team(self.clone(), team)
+            .next()
+            .is_some()
     }
 
     pub fn is_over(&self) -> bool {

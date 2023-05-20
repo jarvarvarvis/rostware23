@@ -36,3 +36,7 @@ harness = false
 name = "perform_random_moves"
 harness = false
 
+
+[[bench]]
+name = "has_team_any_moves"
+harness = false
