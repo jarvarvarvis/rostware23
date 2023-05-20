@@ -19,7 +19,7 @@ impl PVSMoveGetter {
     }
 
     fn pvs(game_state: State, depth: i32, lower_bound: i32, upper_bound: i32) -> anyhow::Result<PVSResult> {
-        if depth < 0 {
+        if depth < 0 || game_state.is_over() {
             return Ok(PVSResult {
                 best_move: None,
                 rating: game_state.score_of_team(game_state.current_team()) as i32 - game_state.score_of_team(game_state.current_team().opponent()) as i32
@@ -28,6 +28,9 @@ impl PVSMoveGetter {
         let mut best_move = None;
         let mut best_score = lower_bound;
         let possible_moves = game_state.possible_moves();
+        if !game_state.has_team_any_moves(game_state.current_team()) {
+            best_score = -Self::pvs(game_state.with_moveless_player_skipped()?, depth - 1, -upper_bound, -best_score)?.rating;
+        }
         for current_move in possible_moves {
             let next_game_state = game_state.with_move_performed(current_move.clone())?;
             let current_score: i32 = -Self::pvs(next_game_state, depth - 1, -upper_bound, -best_score)?.rating;
@@ -48,6 +51,9 @@ impl PVSMoveGetter {
 
 impl MoveGetter for PVSMoveGetter {
     fn get_move(&self, state: &State) -> anyhow::Result<Move> {
+        if !state.has_team_any_moves(state.current_team()) {
+            panic!("MoveGetter invoked without possible moves!");
+        }
         Self::pvs(state.clone(), 1, INITIAL_LOWER_BOUND, INITIAL_UPPER_BOUND).map(|result| result.best_move.unwrap())
     }
 }
@@ -153,17 +159,15 @@ mod tests {
     }
 
     #[test]
-    fn can_predict_move_with_higher_depth_when_opponent_doesnt_have_any_moves() {
+    fn can_calculate_correct_rating_with_higher_depth_when_opponent_doesnt_have_any_moves() {
         let mut board = Board::empty();
         for i in 0..5 {
             board.perform_move(Move::Place(Coordinate::new(i*2, 0)), Team::One).unwrap();
             board.perform_move(Move::Place(Coordinate::new(i*2, 4)), Team::Two).unwrap();
         }
         board.set(Coordinate::new(10, 0), FieldState::Fish(2)).unwrap();
-        board.set(Coordinate::new(11, 1), FieldState::Fish(2)).unwrap();
-        let expected_move = Move::Normal{from: Coordinate::new(8, 0), to: Coordinate::new(10, 0)};
         let game_state = State::from_initial_board_with_start_team_one(board);
         let result_got: PVSResult = PVSMoveGetter::pvs(game_state, 2, INITIAL_LOWER_BOUND, INITIAL_UPPER_BOUND).unwrap();
-        assert_eq!(expected_move, result_got.best_move.unwrap());
+        assert_eq!(2, result_got.rating);
     }
 }
