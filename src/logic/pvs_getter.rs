@@ -30,7 +30,7 @@ impl PVSMoveGetter {
         let possible_moves = game_state.possible_moves();
         for current_move in possible_moves {
             let next_game_state = game_state.with_move_performed(current_move.clone())?;
-            let current_score: i32 = -Self::pvs(next_game_state, depth - 1, -upper_bound, -lower_bound)?.rating;
+            let current_score: i32 = -Self::pvs(next_game_state, depth - 1, -upper_bound, -best_score)?.rating;
             if current_score > best_score {
                 best_move = Some(current_move.clone());
                 best_score = current_score;
