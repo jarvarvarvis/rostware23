@@ -54,7 +54,7 @@ impl MoveGetter for PVSMoveGetter {
         if !state.has_team_any_moves(state.current_team()) {
             panic!("MoveGetter invoked without possible moves!");
         }
-        Self::pvs(state.clone(), 1, INITIAL_LOWER_BOUND, INITIAL_UPPER_BOUND).map(|result| result.best_move.unwrap())
+        Self::pvs(state.clone(), 0, INITIAL_LOWER_BOUND, INITIAL_UPPER_BOUND).map(|result| result.best_move.unwrap())
     }
 }
 
