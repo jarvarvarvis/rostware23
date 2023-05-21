@@ -59,13 +59,13 @@ impl<'playout> Battle<'playout> {
         }
     }
 
-    pub fn mono_directional_with_start_team(&self, mut state: State, mut current_team: Team) -> anyhow::Result<BattleOutcome> {
+    pub fn mono_directional_with_start_team(&self, mut state: State, start_team: Team) -> anyhow::Result<BattleOutcome> {
+        state.start_team = start_team.clone();
         while !state.is_over() {
-            let current_getter = self.move_getter_for_team(current_team.clone());
             state = state.with_moveless_player_skipped()?;
+            let current_getter = self.move_getter_for_team(state.current_team().clone());
             let performed_move = current_getter.get_move(&state)?;
             state = state.with_move_performed(performed_move)?;
-            current_team = current_team.opponent();
         }
         let result = state.get_result()?;
 
