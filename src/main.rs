@@ -36,6 +36,7 @@ fn main() -> anyhow::Result<()> {
         }
 
         if let ServerSideMessage::Result(result) = &server_side_message {
+            println!("Own team: {:?}", protocol.own_team.unwrap());
             println!("Result: {:?}", result);
             break;
         }
