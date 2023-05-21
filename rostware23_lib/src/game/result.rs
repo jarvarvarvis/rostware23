@@ -23,7 +23,7 @@ impl From<XmlGameResult> for GameResult {
         let first_entry = &entries[0];
         let second_entry = &entries[1];
         Self {
-            winner: result.winner.team,
+            winner: result.winner.map(|winner| winner.team),
             points: (
                 TeamAndPoints(first_entry.player.team, first_entry.score.parts[1].0),
                 TeamAndPoints(second_entry.player.team, second_entry.score.parts[1].0)
@@ -86,7 +86,7 @@ mod tests {
                     },
                 ]
             },
-            winner: Winner { team: Some(Team::One) }
+            winner: Some(Winner { team: Team::One })
         };
         let expected = GameResult {
             winner: Some(Team::One),

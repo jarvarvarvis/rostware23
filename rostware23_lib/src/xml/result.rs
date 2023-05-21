@@ -80,7 +80,7 @@ pub struct Scores {
 #[xml(rename = "winner")]
 pub struct Winner {
     #[xml(attribute)]
-    pub team: Option<common::Team>
+    pub team: common::Team
 }
 
 #[derive(FromXml, ToXml, Debug, Eq, PartialEq)]
@@ -88,7 +88,7 @@ pub struct Winner {
 pub struct GameResult {
     pub definition: Definition,
     pub scores: Scores,
-    pub winner: Winner
+    pub winner: Option<Winner>
 }
 
 #[cfg(test)]
@@ -242,7 +242,7 @@ mod tests {
     #[test]
     fn deserialize_winner() {
         let winner = r#"<winner team="ONE"/>"#;
-        let expected = Winner { team: Some(common::Team::One) };
+        let expected = Winner { team: common::Team::One };
         let actual = deserialize(winner).unwrap();
         assert_eq!(expected, actual);
     }
@@ -324,8 +324,96 @@ mod tests {
                         },
                     ]
                 },
-                winner: Winner { team: Some(common::Team::One) }
+                winner: Some(Winner { team: common::Team::One })
             }),
+        };
+        let actual = deserialize(result).unwrap();
+        assert_eq!(expected, actual);
+    }
+
+    #[test]
+    fn deserialize_result_wrapped_in_room() {
+        let result = r#"<room roomId="aecb7719-c6d5-468c-87b0-506c04a794e0">
+        <data class="result">
+          <definition>
+            <fragment name="Siegpunkte">
+              <aggregation>SUM</aggregation>
+              <relevantForRanking>true</relevantForRanking>
+            </fragment>
+            <fragment name="Fische">
+              <aggregation>AVERAGE</aggregation>
+              <relevantForRanking>true</relevantForRanking>
+            </fragment>
+          </definition>
+          <scores>
+            <entry>
+              <player name="Spieler 1" team="ONE"/>
+              <score cause="REGULAR" reason="">
+                <part>2</part>
+                <part>21</part>
+              </score>
+            </entry>
+            <entry>
+              <player name="Spieler 2" team="TWO"/>
+              <score cause="SOFT_TIMEOUT" reason="Der Spieler hat innerhalb von 2 Sekunden nach Aufforderung keinen Zug gesendet">
+                <part>0</part>
+                <part>19</part>
+              </score>
+            </entry>
+          </scores>
+        </data>
+      </room>"#;
+        let expected = room::Room { 
+            room_id: "aecb7719-c6d5-468c-87b0-506c04a794e0".to_string(),
+            data: data::Data {
+                class: data::DataClass::Result,
+                color: None,
+                state: None,
+                sent_move: None,
+                result: Some(GameResult {
+                    definition: Definition {
+                        fragments: vec![
+                            Fragment {
+                                name: "Siegpunkte".to_string(),
+                                aggregation: Aggregation(AggregationKind::Sum),
+                                relevant_for_ranking: RelevantForRanking(true)
+                            },
+                            Fragment {
+                                name: "Fische".to_string(),
+                                aggregation: Aggregation(AggregationKind::Average),
+                                relevant_for_ranking: RelevantForRanking(true)
+                            }
+                        ]
+                    },
+                    scores: Scores {
+                        entries: vec![
+                            ScoresEntry {
+                                player: ScoresEntryPlayer { name: "Spieler 1".to_string(), team: common::Team::One },
+                                score: ScoresEntryScore { 
+                                    cause: "REGULAR".to_string(), 
+                                    reason: "".to_string(), 
+                                    parts: vec![
+                                        ScorePart(2),
+                                        ScorePart(21)
+                                    ]
+                                }
+                            },
+                            ScoresEntry {
+                                player: ScoresEntryPlayer { name: "Spieler 2".to_string(), team: common::Team::Two },
+                                score: ScoresEntryScore { 
+                                    cause: "SOFT_TIMEOUT".to_string(), 
+                                    reason: "Der Spieler hat innerhalb von 2 Sekunden nach Aufforderung keinen Zug gesendet".to_string(), 
+                                    parts: vec![
+                                        ScorePart(0),
+                                        ScorePart(19)
+                                    ]
+                                }
+                            },
+                        ]
+                    },
+                    winner: None
+                }),
+            }
         };
         let actual = deserialize(result).unwrap();
         assert_eq!(expected, actual);
