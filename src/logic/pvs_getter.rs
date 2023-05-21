@@ -5,6 +5,7 @@ use super::Rater;
 use super::fish_difference_rater::FishDifferenceRater;
 use super::combined_rater::CombinedRater;
 use std::marker::PhantomData;
+use std::time::{Duration, Instant};
 
 const INITIAL_LOWER_BOUND: i32 = -1000000;
 const INITIAL_UPPER_BOUND: i32 = -INITIAL_LOWER_BOUND;
@@ -15,12 +16,17 @@ struct PVSResult {
 }
 
 pub struct PVSMoveGetter<Heuristic: Rater> {
-    phantom: PhantomData<Heuristic>
+    phantom: PhantomData<Heuristic>,
+    fixed_depth: bool
 }
 
 impl<Heuristic: Rater> PVSMoveGetter<Heuristic> {
     pub fn new() -> Self {
-        Self {phantom: PhantomData}
+        Self {phantom: PhantomData, fixed_depth: false}
+    }
+
+    pub fn new_fixed() -> Self {
+        Self {phantom: PhantomData, fixed_depth: true}
     }
 
     fn pvs(game_state: State, depth: i32, lower_bound: i32, upper_bound: i32) -> anyhow::Result<PVSResult> {
@@ -67,7 +73,18 @@ impl<Heuristic: Rater> MoveGetter for PVSMoveGetter<Heuristic> {
         if !state.has_team_any_moves(state.current_team()) {
             anyhow::bail!("MoveGetter invoked without possible moves!");
         }
-        Self::pvs(state.clone(), 1, INITIAL_LOWER_BOUND, INITIAL_UPPER_BOUND).map(|result| result.best_move.unwrap())
+        if self.fixed_depth {
+            return Self::pvs(state.clone(), 1, INITIAL_LOWER_BOUND, INITIAL_UPPER_BOUND).map(|result| result.best_move.unwrap());
+        }
+        let mut depth = 1; // Skipping 0 because the calculation time of 1 is insignificant
+        let mut best_move = anyhow::Result::<Move>::Ok(state.possible_moves().next().unwrap());
+        let start = Instant::now();
+        while start.elapsed().as_millis() < 200 {
+            best_move = Self::pvs(state.clone(), depth, INITIAL_LOWER_BOUND, INITIAL_UPPER_BOUND).map(|result| result.best_move.unwrap());
+            depth = depth + 1;
+        }
+        println!("depth {}", depth);
+        best_move
     }
 }
 
@@ -120,7 +137,7 @@ mod tests {
     #[test]
     fn pvs_move_getter_wins_most_games_vs_random_move_getter() {
         let random_getter = RandomGetter::new();
-        let pvs_getter = PVSMoveGetter::<CombinedRater>::new();
+        let pvs_getter = PVSMoveGetter::<CombinedRater>::new_fixed();
         let playout = Battle::between(&random_getter, &pvs_getter);
         let result_1 = playout.multiple_bi_directional(3).unwrap();
         assert_eq!(result_1.winner(), Some(Team::Two));

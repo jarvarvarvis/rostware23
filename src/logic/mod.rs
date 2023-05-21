@@ -6,6 +6,7 @@ pub mod potential_fish_rater;
 pub mod reachable_fish_rater;
 pub mod combined_rater;
 pub mod quadrant_occupation_rater;
+pub mod penguin_cutoff_rater;
 
 use rostware23_lib::game::state::State;
 use rostware23_lib::game::moves::Move;

@@ -8,14 +8,15 @@ use rostware23_lib::game::protocol::Protocol;
 use rostware23_lib::game::server_side_message::*;
 
 use crate::logic::*;
-use crate::logic::random_getter::RandomGetter;
+use crate::logic::pvs_getter::PVSMoveGetter;
+use crate::logic::combined_rater::CombinedRater;
 
 fn main() -> anyhow::Result<()> {
     let mut protocol: Protocol = ClientArgs::parse()?.try_into()?;
     protocol.read_welcome_message()?;
 
     let mut current_state = None;
-    let move_getter = RandomGetter::new();
+    let move_getter = PVSMoveGetter::<CombinedRater>::new();
     loop {
         let current_room_message = protocol.read_room_message()?;
         let server_side_message = ServerSideMessage::try_from(current_room_message)?;
