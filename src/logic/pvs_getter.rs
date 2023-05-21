@@ -3,6 +3,7 @@ use rostware23_lib::game::moves::Move;
 use rostware23_lib::game::state::State;
 use super::Rater;
 use super::fish_difference_rater::FishDifferenceRater;
+use super::combined_rater::CombinedRater;
 use std::marker::PhantomData;
 
 const INITIAL_LOWER_BOUND: i32 = -1000000;
@@ -66,7 +67,7 @@ impl<Heuristic: Rater> MoveGetter for PVSMoveGetter<Heuristic> {
         if !state.has_team_any_moves(state.current_team()) {
             anyhow::bail!("MoveGetter invoked without possible moves!");
         }
-        Self::pvs(state.clone(), 2, INITIAL_LOWER_BOUND, INITIAL_UPPER_BOUND).map(|result| result.best_move.unwrap())
+        Self::pvs(state.clone(), 1, INITIAL_LOWER_BOUND, INITIAL_UPPER_BOUND).map(|result| result.best_move.unwrap())
     }
 }
 
@@ -119,7 +120,7 @@ mod tests {
     #[test]
     fn pvs_move_getter_wins_most_games_vs_random_move_getter() {
         let random_getter = RandomGetter::new();
-        let pvs_getter = PVSMoveGetter::<FishDifferenceRater>::new();
+        let pvs_getter = PVSMoveGetter::<CombinedRater>::new();
         let playout = Battle::between(&random_getter, &pvs_getter);
         let result_1 = playout.multiple_bi_directional(3).unwrap();
         assert_eq!(result_1.winner(), Some(Team::Two));

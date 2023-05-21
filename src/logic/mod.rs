@@ -3,6 +3,7 @@ pub mod random_getter;
 pub mod pvs_getter;
 pub mod fish_difference_rater;
 pub mod potential_fish_rater;
+pub mod combined_rater;
 
 use rostware23_lib::game::state::State;
 use rostware23_lib::game::moves::Move;
