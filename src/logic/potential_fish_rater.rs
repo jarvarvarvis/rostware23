@@ -10,11 +10,12 @@ pub struct PotentialFishRater {}
 impl Rater for PotentialFishRater {
     fn rate(state: &State) -> i32 {
         let mut result: i32 = 0;
-        for current_move in state.possible_moves() {
+        let own_possible_moves = PossibleMovesIterator::make_normal_moves_iterator_for_team(state.clone(), state.current_team());
+        for current_move in own_possible_moves {
             let target_fish = state.board.get(current_move.get_to()).unwrap().get_fish_count().unwrap() as i32;
             result += target_fish;
         }
-        let opponent_possible_moves = PossibleMovesIterator::from_state_and_team(state.clone(), state.current_team().opponent());
+        let opponent_possible_moves = PossibleMovesIterator::make_normal_moves_iterator_for_team(state.clone(), state.current_team().opponent());
         for current_move in opponent_possible_moves {
             let target_fish = state.board.get(current_move.get_to()).unwrap().get_fish_count().unwrap() as i32;
             result -= target_fish;
@@ -60,6 +61,18 @@ mod tests {
         board.set(Coordinate::new(10, 4), FieldState::Fish(4)).unwrap();
         let mut state = State::from_initial_board_with_start_team_one(board);
         state = state.with_move_performed(Move::Normal{from: Coordinate::new(8,0), to: Coordinate::new(10,0)}).unwrap();
+        assert_eq!(1, PotentialFishRater::rate(&state));
+    }
+
+    #[test]
+    fn uses_possible_move_rater_in_normal_case() {
+        let mut board = Board::empty();
+        board.perform_move(Move::Place(Coordinate::new(0, 0)), Team::One).unwrap();
+        board.perform_move(Move::Place(Coordinate::new(0, 4)), Team::Two).unwrap();
+        board.set(Coordinate::new(2, 0), FieldState::Fish(3)).unwrap();
+        board.set(Coordinate::new(2, 4), FieldState::Fish(2)).unwrap();
+        board.set(Coordinate::new(2, 2), FieldState::Fish(1)).unwrap();
+        let state = State::from_initial_board_with_start_team_one(board);
         assert_eq!(1, PotentialFishRater::rate(&state));
     }
 }

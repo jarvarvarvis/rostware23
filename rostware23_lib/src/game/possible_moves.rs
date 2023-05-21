@@ -28,7 +28,7 @@ impl PossibleMovesIterator {
         }
     }
 
-    fn make_normal_moves_iterator_for_team(state: State, team: Team) -> Self {
+    pub fn make_normal_moves_iterator_for_team(state: State, team: Team) -> Self {
         let penguin_iterator = state.board.get_penguin_iterator(team)
             .flat_map(move |penguin| PenguinPossibleMoveIterator::from(penguin, state.board.clone()));
 
