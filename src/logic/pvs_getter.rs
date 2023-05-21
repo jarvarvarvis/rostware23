@@ -60,7 +60,7 @@ impl PVSMoveGetter {
 impl MoveGetter for PVSMoveGetter {
     fn get_move(&self, state: &State) -> anyhow::Result<Move> {
         if !state.has_team_any_moves(state.current_team()) {
-            panic!("MoveGetter invoked without possible moves!");
+            anyhow::bail!("MoveGetter invoked without possible moves!");
         }
         Self::pvs(state.clone(), 5, INITIAL_LOWER_BOUND, INITIAL_UPPER_BOUND).map(|result| result.best_move.unwrap())
     }
