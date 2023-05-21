@@ -63,7 +63,7 @@ mod tests {
             scores: Scores {
                 entries: vec![
                     ScoresEntry {
-                        player: ScoresEntryPlayer { name: "A Team".to_string(), team: Team::One },
+                        player: ScoresEntryPlayer { name: Some("A Team".to_string()), team: Team::One },
                         score: ScoresEntryScore { 
                             cause: "REGULAR".to_string(), 
                             reason: "".to_string(), 
@@ -74,7 +74,7 @@ mod tests {
                         }
                     },
                     ScoresEntry {
-                        player: ScoresEntryPlayer { name: "B Team".to_string(), team: Team::Two },
+                        player: ScoresEntryPlayer { name: Some("B Team".to_string()), team: Team::Two },
                         score: ScoresEntryScore { 
                             cause: "LEFT".to_string(), 
                             reason: "Player left".to_string(), 

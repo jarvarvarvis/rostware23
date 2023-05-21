@@ -39,7 +39,7 @@ pub struct Definition {
 #[xml(rename = "player")]
 pub struct ScoresEntryPlayer {
     #[xml(attribute)]
-    pub name: String,
+    pub name: Option<String>,
 
     #[xml(attribute)]
     pub team: common::Team
@@ -161,7 +161,7 @@ mod tests {
     fn deserialize_score_entry_player() {
         let player = r#"<player name="amogus" team="TWO"/>"#;
         let expected = ScoresEntryPlayer { 
-            name: "amogus".to_string(),
+            name: Some("amogus".to_string()),
             team: common::Team::Two
         };
         let actual = deserialize(player).unwrap();
@@ -212,7 +212,7 @@ mod tests {
         let expected = Scores {
             entries: vec![
                 ScoresEntry {
-                    player: ScoresEntryPlayer { name: "A Team".to_string(), team: common::Team::One },
+                    player: ScoresEntryPlayer { name: Some("A Team".to_string()), team: common::Team::One },
                     score: ScoresEntryScore { 
                         cause: "REGULAR".to_string(), 
                         reason: "".to_string(), 
@@ -223,7 +223,7 @@ mod tests {
                     }
                 },
                 ScoresEntry {
-                    player: ScoresEntryPlayer { name: "B Team".to_string(), team: common::Team::Two },
+                    player: ScoresEntryPlayer { name: Some("B Team".to_string()), team: common::Team::Two },
                     score: ScoresEntryScore { 
                         cause: "LEFT".to_string(), 
                         reason: "Player left".to_string(), 
@@ -301,7 +301,7 @@ mod tests {
                 scores: Scores {
                     entries: vec![
                         ScoresEntry {
-                            player: ScoresEntryPlayer { name: "A Team".to_string(), team: common::Team::One },
+                            player: ScoresEntryPlayer { name: Some("A Team".to_string()), team: common::Team::One },
                             score: ScoresEntryScore { 
                                 cause: "REGULAR".to_string(), 
                                 reason: "".to_string(), 
@@ -312,7 +312,7 @@ mod tests {
                             }
                         },
                         ScoresEntry {
-                            player: ScoresEntryPlayer { name: "B Team".to_string(), team: common::Team::Two },
+                            player: ScoresEntryPlayer { name: Some("B Team".to_string()), team: common::Team::Two },
                             score: ScoresEntryScore { 
                                 cause: "LEFT".to_string(), 
                                 reason: "Player left".to_string(), 
@@ -388,7 +388,7 @@ mod tests {
                     scores: Scores {
                         entries: vec![
                             ScoresEntry {
-                                player: ScoresEntryPlayer { name: "Spieler 1".to_string(), team: common::Team::One },
+                                player: ScoresEntryPlayer { name: Some("Spieler 1".to_string()), team: common::Team::One },
                                 score: ScoresEntryScore { 
                                     cause: "REGULAR".to_string(), 
                                     reason: "".to_string(), 
@@ -399,7 +399,7 @@ mod tests {
                                 }
                             },
                             ScoresEntry {
-                                player: ScoresEntryPlayer { name: "Spieler 2".to_string(), team: common::Team::Two },
+                                player: ScoresEntryPlayer { name: Some("Spieler 2".to_string()), team: common::Team::Two },
                                 score: ScoresEntryScore { 
                                     cause: "SOFT_TIMEOUT".to_string(), 
                                     reason: "Der Spieler hat innerhalb von 2 Sekunden nach Aufforderung keinen Zug gesendet".to_string(), 
