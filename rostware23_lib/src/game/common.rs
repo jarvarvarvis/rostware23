@@ -17,6 +17,10 @@ impl Vector {
         Self(first.x() as i64 - second.x() as i64, first.y() as i64 - second.y() as i64)
     }
 
+    pub fn scale(&self, scalar: i64) -> Self {
+        Self(self.x() * scalar, self.y() * scalar)
+    }
+
     pub fn scalar_product(&self, other: Vector) -> i64 {
         self.x() * other.x() + self.y() * other.y() 
     }

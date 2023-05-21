@@ -5,6 +5,7 @@ pub mod fish_difference_rater;
 pub mod potential_fish_rater;
 pub mod reachable_fish_rater;
 pub mod penguin_restrictions;
+pub mod restricted_reachable_fish_rater;
 pub mod combined_rater;
 pub mod quadrant_occupation_rater;
 pub mod penguin_cutoff_rater;
