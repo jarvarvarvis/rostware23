@@ -13,6 +13,24 @@ impl Vector {
         Self(x, y)
     }
 
+    pub fn between_coordinates(first: Coordinate, second: Coordinate) -> Self {
+        Self(first.x() as i64 - second.x() as i64, first.y() as i64 - second.y() as i64)
+    }
+
+    pub fn scalar_product(&self, other: Vector) -> i64 {
+        self.x() * other.x() + self.y() * other.y() 
+    }
+
+    pub fn abs(&self) -> f64 {
+        let product = self.scalar_product(self.clone());
+        (product as f64).sqrt()
+    }
+
+    pub fn angle_to(&self, other: Vector) -> f64 {
+        let v = self.scalar_product(other.clone()) as f64 / (self.abs() * other.abs());
+        v.acos()
+    }
+
     pub fn x(&self) -> i64 {
         self.0
     }
@@ -78,5 +96,43 @@ mod tests {
         let coord = Coordinate::new(6, 2);
         let actual = coord.clone().doubled_to_odd_r().odd_r_to_doubled();
         assert_eq!(coord, actual);
+    }
+
+    #[test]
+    fn take_abs_of_vector() {
+        let vector = Vector::new(7, 2);
+        let absolute = vector.abs();
+        assert_eq!(7.280109889280518, absolute);
+    }
+    
+    #[test]
+    fn take_abs_of_vector_with_negative_components() {
+        let vector = Vector::new(7, -2);
+        let absolute = vector.abs();
+        assert_eq!(7.280109889280518, absolute);
+    }
+
+    #[test]
+    fn vector_between_coordinates_is_correct() {
+        let first = Coordinate::new(4, 5);
+        let second = Coordinate::new(1, 12);
+        let expected = Vector::new(3, -7);
+        let actual = Vector::between_coordinates(first, second);
+        assert_eq!(expected, actual);
+    }
+
+    #[test]
+    fn angle_between_same_vectors() {
+        let vector = Vector::new(4, 5);
+        let actual = vector.angle_to(vector.clone());
+        assert_eq!(0.0, actual);
+    }
+
+    #[test]
+    fn angle_between_vectors_test() {
+        let first = Vector::new(3, 5);
+        let second = Vector::new(-5, 3);
+        let actual = first.angle_to(second);
+        assert_eq!(std::f64::consts::PI / 2.0, actual);
     }
 }
