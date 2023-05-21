@@ -1,7 +1,9 @@
 use super::MoveGetter;
-use anyhow::Context;
 use rostware23_lib::game::moves::Move;
 use rostware23_lib::game::state::State;
+use super::Rater;
+use super::fish_difference_rater::FishDifferenceRater;
+use std::marker::PhantomData;
 
 const INITIAL_LOWER_BOUND: i32 = -1000000;
 const INITIAL_UPPER_BOUND: i32 = -INITIAL_LOWER_BOUND;
@@ -11,18 +13,20 @@ struct PVSResult {
     rating: i32
 }
 
-pub struct PVSMoveGetter;
+pub struct PVSMoveGetter<Heuristic: Rater> {
+    phantom: PhantomData<Heuristic>
+}
 
-impl PVSMoveGetter {
+impl<Heuristic: Rater> PVSMoveGetter<Heuristic> {
     pub fn new() -> Self {
-        Self
+        Self {phantom: PhantomData}
     }
 
     fn pvs(game_state: State, depth: i32, lower_bound: i32, upper_bound: i32) -> anyhow::Result<PVSResult> {
         if depth < 0 || game_state.is_over() {
             return Ok(PVSResult {
                 best_move: None,
-                rating: game_state.score_of_team(game_state.current_team()) as i32 - game_state.score_of_team(game_state.current_team().opponent()) as i32
+                rating: Heuristic::rate(&game_state)
             });
         }
         let mut possible_moves = game_state.possible_moves();
@@ -57,12 +61,12 @@ impl PVSMoveGetter {
     }
 }
 
-impl MoveGetter for PVSMoveGetter {
+impl<Heuristic: Rater> MoveGetter for PVSMoveGetter<Heuristic> {
     fn get_move(&self, state: &State) -> anyhow::Result<Move> {
         if !state.has_team_any_moves(state.current_team()) {
             anyhow::bail!("MoveGetter invoked without possible moves!");
         }
-        Self::pvs(state.clone(), 5, INITIAL_LOWER_BOUND, INITIAL_UPPER_BOUND).map(|result| result.best_move.unwrap())
+        Self::pvs(state.clone(), 2, INITIAL_LOWER_BOUND, INITIAL_UPPER_BOUND).map(|result| result.best_move.unwrap())
     }
 }
 
@@ -90,7 +94,7 @@ mod tests {
         board.set(Coordinate::new(14, 0), FieldState::Fish(1)).unwrap();
         let game_state = State::from_initial_board_with_start_team_one(board);
         let expected_move = Move::Normal{from: moving_penguin_coord, to: expected_target};
-        let result_got: PVSResult = PVSMoveGetter::pvs(game_state, 0, INITIAL_LOWER_BOUND, INITIAL_UPPER_BOUND).unwrap();
+        let result_got: PVSResult = PVSMoveGetter::<FishDifferenceRater>::pvs(game_state, 0, INITIAL_LOWER_BOUND, INITIAL_UPPER_BOUND).unwrap();
         assert_eq!(expected_move, result_got.best_move.unwrap());
     }
 
@@ -108,14 +112,14 @@ mod tests {
         board.set(Coordinate::new(14, 2), FieldState::Fish(1)).unwrap();
         let game_state = State::from_initial_board_with_start_team_one(board);
         let expected_move = Move::Normal{from: moving_penguin_coord, to: expected_target};
-        let result_got: PVSResult = PVSMoveGetter::pvs(game_state, 0, INITIAL_LOWER_BOUND, INITIAL_UPPER_BOUND).unwrap();
+        let result_got: PVSResult = PVSMoveGetter::<FishDifferenceRater>::pvs(game_state, 0, INITIAL_LOWER_BOUND, INITIAL_UPPER_BOUND).unwrap();
         assert_eq!(expected_move, result_got.best_move.unwrap());
     }
 
     #[test]
     fn pvs_move_getter_wins_most_games_vs_random_move_getter() {
         let random_getter = RandomGetter::new();
-        let pvs_getter = PVSMoveGetter::new();
+        let pvs_getter = PVSMoveGetter::<FishDifferenceRater>::new();
         let playout = Battle::between(&random_getter, &pvs_getter);
         let result_1 = playout.multiple_bi_directional(3).unwrap();
         assert_eq!(result_1.winner(), Some(Team::Two));
@@ -142,7 +146,7 @@ mod tests {
         let expected_target = Coordinate::new(10, 0);
         let game_state = create_higher_depth_test_game_state(moving_penguin_coord.clone(), expected_target.clone());
         let expected_move = Move::Normal{from: moving_penguin_coord, to: expected_target};
-        let result_got: PVSResult = PVSMoveGetter::pvs(game_state, 2, INITIAL_LOWER_BOUND, INITIAL_UPPER_BOUND).unwrap();
+        let result_got: PVSResult = PVSMoveGetter::<FishDifferenceRater>::pvs(game_state, 2, INITIAL_LOWER_BOUND, INITIAL_UPPER_BOUND).unwrap();
         assert_eq!(expected_move, result_got.best_move.unwrap());
     }
 
@@ -152,7 +156,7 @@ mod tests {
         let expected_target = Coordinate::new(10, 0);
         let game_state = create_higher_depth_test_game_state(moving_penguin_coord.clone(), expected_target.clone());
         let expected_move = Move::Normal{from: moving_penguin_coord, to: expected_target};
-        let result_got: PVSResult = PVSMoveGetter::pvs(game_state, 2, 3, 5).unwrap();
+        let result_got: PVSResult = PVSMoveGetter::<FishDifferenceRater>::pvs(game_state, 2, 3, 5).unwrap();
         assert_eq!(expected_move, result_got.best_move.unwrap());
     }
 
@@ -161,8 +165,7 @@ mod tests {
         let moving_penguin_coord = Coordinate::new(12, 0);
         let expected_target = Coordinate::new(10, 0);
         let game_state = create_higher_depth_test_game_state(moving_penguin_coord.clone(), expected_target.clone());
-        let expected_move = Move::Normal{from: moving_penguin_coord, to: expected_target};
-        let result_got: PVSResult = PVSMoveGetter::pvs(game_state, 2, 0, 2).unwrap();
+        let result_got: PVSResult = PVSMoveGetter::<FishDifferenceRater>::pvs(game_state, 2, 0, 2).unwrap();
         assert!(2 <= result_got.rating);
     }
 
@@ -175,7 +178,7 @@ mod tests {
         }
         board.set(Coordinate::new(10, 0), FieldState::Fish(2)).unwrap();
         let game_state = State::from_initial_board_with_start_team_one(board);
-        let result_got: PVSResult = PVSMoveGetter::pvs(game_state, 2, INITIAL_LOWER_BOUND, INITIAL_UPPER_BOUND).unwrap();
+        let result_got: PVSResult = PVSMoveGetter::<FishDifferenceRater>::pvs(game_state, 2, INITIAL_LOWER_BOUND, INITIAL_UPPER_BOUND).unwrap();
         assert_eq!(2, result_got.rating);
     }
 }
