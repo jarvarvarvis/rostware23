@@ -49,9 +49,34 @@ impl Coordinate {
         Self(x * 2 + y % 2, y)
     }
 
+    pub fn doubled_to_odd_r(self) -> Self {
+        let x = self.x();
+        let y = self.y();
+        Self((x as f64 / 2.0).ceil() as u64 - y % 2, y)
+    }
+
     pub fn is_valid(&self) -> bool {
         let x = self.x();
         let y = self.y();
         x <= RIGHTMOST_X && y < BOARD_HEIGHT && x % 2 == y % 2
+    }
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[test]
+    fn odd_r_to_doubled_to_odd_r_results_in_previous_value() {
+        let coord = Coordinate::new(6, 2);
+        let actual = coord.clone().odd_r_to_doubled().doubled_to_odd_r();
+        assert_eq!(coord, actual);
+    }
+    
+    #[test]
+    fn doubled_to_odd_r_to_doubled_results_in_previous_value() {
+        let coord = Coordinate::new(6, 2);
+        let actual = coord.clone().doubled_to_odd_r().odd_r_to_doubled();
+        assert_eq!(coord, actual);
     }
 }
