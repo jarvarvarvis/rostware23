@@ -4,6 +4,7 @@ use rostware23_lib::game::state_generator::create_any;
 use rostware23_lib::xml::common::Team;
 
 use super::MoveGetter;
+use super::time_measurer::TimeMeasurer;
 
 #[derive(Debug)]
 pub struct BattleOutcome(u32, u32);
@@ -64,7 +65,7 @@ impl<'playout> Battle<'playout> {
         while !state.is_over() {
             state = state.with_moveless_player_skipped()?;
             let current_getter = self.move_getter_for_team(state.current_team().clone());
-            let performed_move = current_getter.get_move(&state)?;
+            let performed_move = current_getter.get_move(&state, &TimeMeasurer::new_infinite())?;
             state = state.with_move_performed(performed_move)?;
         }
         let result = state.get_result()?;

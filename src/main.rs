@@ -10,6 +10,7 @@ use rostware23_lib::game::server_side_message::*;
 use crate::logic::*;
 use crate::logic::pvs_getter::PVSMoveGetter;
 use crate::logic::combined_rater::CombinedRater;
+use crate::logic::time_measurer::TimeMeasurer;
 
 fn main() -> anyhow::Result<()> {
     let mut protocol: Protocol = ClientArgs::parse()?.try_into()?;
@@ -29,8 +30,9 @@ fn main() -> anyhow::Result<()> {
         if let ServerSideMessage::MoveRequest = &server_side_message {
             println!("Got move request");
             if let Some(current_state) = &current_state {
-                let chosen_move = move_getter.get_move(&current_state.with_moveless_player_skipped()?)?;
-                println!("Sending move: {:?}", chosen_move);
+                let time_measurer = TimeMeasurer::new(1900);
+                let chosen_move = move_getter.get_move(&current_state.with_moveless_player_skipped()?, &time_measurer)?;
+                println!("Sending move {:?} after {}ms", chosen_move, time_measurer.elapsed_millis_since_start());
                 protocol.send_move(chosen_move)?;
             }
         }

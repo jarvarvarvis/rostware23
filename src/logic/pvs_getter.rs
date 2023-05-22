@@ -1,14 +1,17 @@
-use super::MoveGetter;
+use std::marker::PhantomData;
+
+use rostware23_lib::game::common::{BOARD_WIDTH, BOARD_HEIGHT};
 use rostware23_lib::game::moves::Move;
 use rostware23_lib::game::state::State;
+
+use super::MoveGetter;
+use super::time_measurer::TimeMeasurer;
 use super::Rater;
-use super::fish_difference_rater::FishDifferenceRater;
-use super::combined_rater::CombinedRater;
-use std::marker::PhantomData;
-use std::time::{Duration, Instant};
 
 const INITIAL_LOWER_BOUND: i32 = -1000000;
 const INITIAL_UPPER_BOUND: i32 = -INITIAL_LOWER_BOUND;
+
+const MAX_DEPTH: i32 = BOARD_WIDTH as i32 * BOARD_HEIGHT as i32;
 
 struct PVSResult {
     best_move: Option<Move>,
@@ -29,8 +32,8 @@ impl<Heuristic: Rater> PVSMoveGetter<Heuristic> {
         Self {phantom: PhantomData, fixed_depth: true}
     }
 
-    fn pvs(game_state: State, depth: i32, lower_bound: i32, upper_bound: i32) -> anyhow::Result<PVSResult> {
-        if depth < 0 || game_state.is_over() {
+    fn pvs(game_state: State, depth: i32, lower_bound: i32, upper_bound: i32, time_measurer: &TimeMeasurer) -> anyhow::Result<PVSResult> {
+        if depth < 0 || game_state.is_over() || !time_measurer.has_time_left() {
             return Ok(PVSResult {
                 best_move: None,
                 rating: Heuristic::rate(&game_state)
@@ -40,18 +43,18 @@ impl<Heuristic: Rater> PVSMoveGetter<Heuristic> {
         let mut best_move = possible_moves.next();
         let mut best_score = lower_bound;
         match best_move.clone() {
-            None => {best_score = -Self::pvs(game_state.with_moveless_player_skipped()?, depth - 1, -upper_bound, -best_score)?.rating;}
+            None => {best_score = -Self::pvs(game_state.with_moveless_player_skipped()?, depth - 1, -upper_bound, -best_score, time_measurer)?.rating;}
             Some(first_move) => {
                 let next_game_state = game_state.with_move_performed(first_move.clone())?;
-                best_score = -Self::pvs(next_game_state, depth - 1, -upper_bound, -best_score)?.rating;
+                best_score = -Self::pvs(next_game_state, depth - 1, -upper_bound, -best_score, time_measurer)?.rating;
             }
         }
         for current_move in possible_moves {
             let next_game_state = game_state.with_move_performed(current_move.clone())?;
-            let mut current_score: i32 = -Self::pvs(next_game_state.clone(), depth - 1, -best_score - 1, -best_score)?.rating; // zero-window search
+            let mut current_score: i32 = -Self::pvs(next_game_state.clone(), depth - 1, -best_score - 1, -best_score, time_measurer)?.rating; // zero-window search
             if current_score > lower_bound && current_score < upper_bound {
                 // detailed search if zero-window search passes
-                current_score = -Self::pvs(next_game_state, depth - 1, -upper_bound, -best_score)?.rating;
+                current_score = -Self::pvs(next_game_state, depth - 1, -upper_bound, -best_score, time_measurer)?.rating;
             }
             if current_score > best_score {
                 best_move = Some(current_move.clone());
@@ -69,18 +72,20 @@ impl<Heuristic: Rater> PVSMoveGetter<Heuristic> {
 }
 
 impl<Heuristic: Rater> MoveGetter for PVSMoveGetter<Heuristic> {
-    fn get_move(&self, state: &State) -> anyhow::Result<Move> {
+    fn get_move(&self, state: &State, time_measurer: &TimeMeasurer) -> anyhow::Result<Move> {
         if !state.has_team_any_moves(state.current_team()) {
             anyhow::bail!("MoveGetter invoked without possible moves!");
         }
         if self.fixed_depth {
-            return Self::pvs(state.clone(), 1, INITIAL_LOWER_BOUND, INITIAL_UPPER_BOUND).map(|result| result.best_move.unwrap());
+            return Self::pvs(state.clone(), 1, INITIAL_LOWER_BOUND, INITIAL_UPPER_BOUND, time_measurer).map(|result| result.best_move.unwrap());
         }
         let mut depth = 1; // Skipping 0 because the calculation time of 1 is insignificant
         let mut best_move = anyhow::Result::<Move>::Ok(state.possible_moves().next().unwrap());
-        let start = Instant::now();
-        while start.elapsed().as_millis() < 200 {
-            best_move = Self::pvs(state.clone(), depth, INITIAL_LOWER_BOUND, INITIAL_UPPER_BOUND).map(|result| result.best_move.unwrap());
+        while time_measurer.has_time_left() {
+            best_move = Self::pvs(state.clone(), depth, INITIAL_LOWER_BOUND, INITIAL_UPPER_BOUND, time_measurer).map(|result| result.best_move.unwrap());
+            if depth >= MAX_DEPTH {
+                break;
+            }
             depth = depth + 1;
         }
         println!("depth {}", depth);
@@ -97,6 +102,8 @@ mod tests {
     use rostware23_lib::game::board::*;
 
     use crate::logic::battle::Battle;
+    use crate::logic::combined_rater::CombinedRater;
+    use crate::logic::fish_difference_rater::FishDifferenceRater;
     use crate::logic::random_getter::*;
 
     #[test]
@@ -112,7 +119,8 @@ mod tests {
         board.set(Coordinate::new(14, 0), FieldState::Fish(1)).unwrap();
         let game_state = State::from_initial_board_with_start_team_one(board);
         let expected_move = Move::Normal{from: moving_penguin_coord, to: expected_target};
-        let result_got: PVSResult = PVSMoveGetter::<FishDifferenceRater>::pvs(game_state, 0, INITIAL_LOWER_BOUND, INITIAL_UPPER_BOUND).unwrap();
+        let time_measurer = TimeMeasurer::new_infinite();
+        let result_got: PVSResult = PVSMoveGetter::<FishDifferenceRater>::pvs(game_state, 0, INITIAL_LOWER_BOUND, INITIAL_UPPER_BOUND, &time_measurer).unwrap();
         assert_eq!(expected_move, result_got.best_move.unwrap());
     }
 
@@ -130,7 +138,8 @@ mod tests {
         board.set(Coordinate::new(14, 2), FieldState::Fish(1)).unwrap();
         let game_state = State::from_initial_board_with_start_team_one(board);
         let expected_move = Move::Normal{from: moving_penguin_coord, to: expected_target};
-        let result_got: PVSResult = PVSMoveGetter::<FishDifferenceRater>::pvs(game_state, 0, INITIAL_LOWER_BOUND, INITIAL_UPPER_BOUND).unwrap();
+        let time_measurer = TimeMeasurer::new_infinite();
+        let result_got: PVSResult = PVSMoveGetter::<FishDifferenceRater>::pvs(game_state, 0, INITIAL_LOWER_BOUND, INITIAL_UPPER_BOUND, &time_measurer).unwrap();
         assert_eq!(expected_move, result_got.best_move.unwrap());
     }
 
@@ -164,7 +173,8 @@ mod tests {
         let expected_target = Coordinate::new(10, 0);
         let game_state = create_higher_depth_test_game_state(moving_penguin_coord.clone(), expected_target.clone());
         let expected_move = Move::Normal{from: moving_penguin_coord, to: expected_target};
-        let result_got: PVSResult = PVSMoveGetter::<FishDifferenceRater>::pvs(game_state, 2, INITIAL_LOWER_BOUND, INITIAL_UPPER_BOUND).unwrap();
+        let time_measurer = TimeMeasurer::new_infinite();
+        let result_got: PVSResult = PVSMoveGetter::<FishDifferenceRater>::pvs(game_state, 2, INITIAL_LOWER_BOUND, INITIAL_UPPER_BOUND, &time_measurer).unwrap();
         assert_eq!(expected_move, result_got.best_move.unwrap());
     }
 
@@ -174,7 +184,8 @@ mod tests {
         let expected_target = Coordinate::new(10, 0);
         let game_state = create_higher_depth_test_game_state(moving_penguin_coord.clone(), expected_target.clone());
         let expected_move = Move::Normal{from: moving_penguin_coord, to: expected_target};
-        let result_got: PVSResult = PVSMoveGetter::<FishDifferenceRater>::pvs(game_state, 2, 3, 5).unwrap();
+        let time_measurer = TimeMeasurer::new_infinite();
+        let result_got: PVSResult = PVSMoveGetter::<FishDifferenceRater>::pvs(game_state, 2, 3, 5, &time_measurer).unwrap();
         assert_eq!(expected_move, result_got.best_move.unwrap());
     }
 
@@ -183,7 +194,8 @@ mod tests {
         let moving_penguin_coord = Coordinate::new(12, 0);
         let expected_target = Coordinate::new(10, 0);
         let game_state = create_higher_depth_test_game_state(moving_penguin_coord.clone(), expected_target.clone());
-        let result_got: PVSResult = PVSMoveGetter::<FishDifferenceRater>::pvs(game_state, 2, 0, 2).unwrap();
+        let time_measurer = TimeMeasurer::new_infinite();
+        let result_got: PVSResult = PVSMoveGetter::<FishDifferenceRater>::pvs(game_state, 2, 0, 2, &time_measurer).unwrap();
         assert!(2 <= result_got.rating);
     }
 
@@ -196,7 +208,8 @@ mod tests {
         }
         board.set(Coordinate::new(10, 0), FieldState::Fish(2)).unwrap();
         let game_state = State::from_initial_board_with_start_team_one(board);
-        let result_got: PVSResult = PVSMoveGetter::<FishDifferenceRater>::pvs(game_state, 2, INITIAL_LOWER_BOUND, INITIAL_UPPER_BOUND).unwrap();
+        let time_measurer = TimeMeasurer::new_infinite();
+        let result_got: PVSResult = PVSMoveGetter::<FishDifferenceRater>::pvs(game_state, 2, INITIAL_LOWER_BOUND, INITIAL_UPPER_BOUND, &time_measurer).unwrap();
         assert_eq!(2, result_got.rating);
     }
 }
