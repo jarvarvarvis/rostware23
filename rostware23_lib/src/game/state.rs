@@ -27,7 +27,7 @@ impl State {
         }
     }
 
-    fn turn_based_current_team(&self) -> Team {
+    pub fn current_team(&self) -> Team {
         if self.turn % 2 == 0 { 
             self.start_team.clone()
         } else {
@@ -43,12 +43,6 @@ impl State {
 
     pub fn is_over(&self) -> bool {
         return !self.has_team_any_moves(Team::One) && !self.has_team_any_moves(Team::Two)
-    }
-
-    pub fn current_team(&self) -> Team {
-        let assumed_current_team = self.turn_based_current_team();
-        let opponent = assumed_current_team.opponent();
-        assumed_current_team
     }
 
     pub fn score_of_team(&self, team: Team) -> u32 {
@@ -203,7 +197,7 @@ mod tests {
             team_two_fish: 0,
             board: Board::empty()
         };
-        assert_eq!(Team::Two, state.turn_based_current_team());
+        assert_eq!(Team::Two, state.current_team());
     }
 
     #[test]
@@ -215,7 +209,7 @@ mod tests {
             team_two_fish: 0,
             board: Board::empty()
         };
-        assert_eq!(Team::One, state.turn_based_current_team());
+        assert_eq!(Team::One, state.current_team());
     }
 
     #[test]
@@ -370,7 +364,7 @@ mod tests {
         board.perform_move(Move::Place(Coordinate::new(4, 2)), Team::Two).unwrap();
         board.perform_move(Move::Place(Coordinate::new(6, 2)), Team::Two).unwrap();
         board.set(Coordinate::new(8, 2), FieldState::Fish(2)).unwrap();
-        let mut state = State::from_initial_board_with_start_team_one(board);
+        let state = State::from_initial_board_with_start_team_one(board);
 
         let result = state.get_result();
         assert!(result.is_err());

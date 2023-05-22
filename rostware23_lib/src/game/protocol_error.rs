@@ -34,7 +34,6 @@ impl From<ErrorPacket> for ProtocolError {
 
 #[cfg(test)]
 mod tests {
-    use crate::xml::*;
     use super::*;
 
     #[test]

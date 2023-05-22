@@ -1,7 +1,5 @@
 use instant_xml::{FromXml, ToXml};
 
-use super::common;
-
 #[derive(FromXml, ToXml, Debug, Eq, PartialEq)]
 #[xml(rename = "from")]
 pub struct From {
