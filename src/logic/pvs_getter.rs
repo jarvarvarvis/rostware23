@@ -1,5 +1,6 @@
 use std::marker::PhantomData;
 
+use anyhow::Context;
 use rostware23_lib::game::common::{BOARD_WIDTH, BOARD_HEIGHT};
 use rostware23_lib::game::moves::Move;
 use rostware23_lib::game::state::State;
@@ -80,16 +81,22 @@ impl<Heuristic: Rater> MoveGetter for PVSMoveGetter<Heuristic> {
             return Self::pvs(state.clone(), 1, INITIAL_LOWER_BOUND, INITIAL_UPPER_BOUND, time_measurer).map(|result| result.best_move.unwrap());
         }
         let mut depth = 1; // Skipping 0 because the calculation time of 1 is insignificant
-        let mut best_move = anyhow::Result::<Move>::Ok(state.possible_moves().next().unwrap());
+        let mut best_move = Some(state.possible_moves().next().unwrap());
+        let mut best_rating = i32::min_value();
         while time_measurer.has_time_left() {
-            best_move = Self::pvs(state.clone(), depth, INITIAL_LOWER_BOUND, INITIAL_UPPER_BOUND, time_measurer).map(|result| result.best_move.unwrap());
+            let result = Self::pvs(state.clone(), depth, INITIAL_LOWER_BOUND, INITIAL_UPPER_BOUND, time_measurer)?;
+            if result.rating > best_rating {
+                println!("Found better move {:?} with rating {}", result.best_move, result.rating);
+                best_rating = result.rating;
+                best_move = result.best_move;
+            }
             if depth >= MAX_DEPTH {
                 break;
             }
             depth = depth + 1;
         }
         println!("depth {}", depth);
-        best_move
+        best_move.context("No move found")
     }
 }
 
