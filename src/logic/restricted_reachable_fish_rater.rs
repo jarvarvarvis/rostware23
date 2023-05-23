@@ -53,7 +53,7 @@ impl RestrictedReachableFishRater {
 impl Rater for RestrictedReachableFishRater {
     fn rate(game_state: &State) -> i32 {
         let current_team = game_state.current_team();
-        Self::reachable_fish_count_of_team(game_state, current_team) - Self::reachable_fish_count_of_team(game_state, current_team.clone())
+        Self::reachable_fish_count_of_team(game_state, current_team) - Self::reachable_fish_count_of_team(game_state, current_team.opponent())
     }
 }
 
@@ -162,5 +162,25 @@ mod tests {
         let state = State::from_initial_board_with_start_team_one(board);
         let fish_count = RestrictedReachableFishRater::reachable_fish_count_of_team(&state, Team::One);
         assert_eq!(9, fish_count);
+    }
+
+    #[test]
+    fn given_board_with_penguins_of_both_teams_and_bigger_fish_field_island_then_rating_is_correct() {
+        let mut board = Board::empty();
+        board.set(Coordinate::new(8, 2), FieldState::Fish(3)).unwrap();
+        board.set(Coordinate::new(7, 3), FieldState::Fish(1)).unwrap();
+        board.set(Coordinate::new(11, 3), FieldState::Fish(1)).unwrap();
+        board.perform_move(Move::Place(Coordinate::new(9, 3)), Team::Two).unwrap();
+        board.perform_move(Move::Place(Coordinate::new(13, 3)), Team::One).unwrap();
+        board.set(Coordinate::new(6, 4), FieldState::Fish(3)).unwrap();
+        board.set(Coordinate::new(8, 4), FieldState::Fish(1)).unwrap();
+        board.set(Coordinate::new(10, 4), FieldState::Fish(4)).unwrap();
+        board.set(Coordinate::new(12, 4), FieldState::Fish(3)).unwrap();
+        board.set(Coordinate::new(7, 5), FieldState::Fish(2)).unwrap();
+        board.set(Coordinate::new(9, 5), FieldState::Fish(2)).unwrap();
+        board.set(Coordinate::new(11, 5), FieldState::Fish(3)).unwrap();
+        let state = State::from_initial_board_with_start_team_one(board);
+        let actual = RestrictedReachableFishRater::rate(&state);
+        assert_eq!(13 - 23, actual);
     }
 }
