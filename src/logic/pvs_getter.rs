@@ -90,6 +90,11 @@ impl<Heuristic: Rater> MoveGetter for PVSMoveGetter<Heuristic> {
                 best_rating = result.rating;
                 best_move = result.best_move;
             }
+
+            if !time_measurer.has_time_left() {
+                break;
+            }
+
             if depth >= MAX_DEPTH {
                 break;
             }
