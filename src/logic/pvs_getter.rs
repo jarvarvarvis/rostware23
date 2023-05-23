@@ -82,17 +82,11 @@ impl<Heuristic: Rater> MoveGetter for PVSMoveGetter<Heuristic> {
         }
         let mut depth = 1; // Skipping 0 because the calculation time of 1 is insignificant
         let mut best_move = Some(state.possible_moves().next().unwrap());
-        let mut best_rating = i32::min_value();
         while time_measurer.has_time_left() {
-            let depth_multiplier = if depth % 2 == 0 { -1 } else { 1 };
             let result = Self::pvs(state.clone(), depth, INITIAL_LOWER_BOUND, INITIAL_UPPER_BOUND, time_measurer)?;
-            let current_rating = depth_multiplier * result.rating;
-            if current_rating > best_rating {
-                println!("Found better move {:?} with rating {} at depth {}", 
-                         result.best_move, current_rating, depth);
-                best_rating = current_rating;
-                best_move = result.best_move;
-            }
+            println!("Found move {:?} with rating {} at depth {}", 
+                     result.best_move, result.rating, depth);
+            best_move = result.best_move;
 
             if !time_measurer.has_time_left() {
                 break;
