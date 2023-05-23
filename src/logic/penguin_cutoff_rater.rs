@@ -45,7 +45,7 @@ impl PenguinCutOffRater {
 impl Rater for PenguinCutOffRater {
     fn rate(state: &State) -> i32 {
         let current_team = state.current_team();
-        Self::get_cutoff_rating_for_team(state, current_team) +
+        Self::get_cutoff_rating_for_team(state, current_team.clone()) +
             Self::get_cutoff_rating_for_team(state, current_team.opponent())
     }
 }
@@ -106,17 +106,17 @@ mod tests {
     #[test]
     fn cutoff_rating_of_team_one_when_team_two_penguins_have_been_or_are_about_to_be_cut_off() {
         let mut board = Board::empty();
-        board.perform_move(Move::Place(Coordinate::new(0, 0)), Team::One).unwrap();
-        board.perform_move(Move::Place(Coordinate::new(4, 0)), Team::One).unwrap();
+        board.perform_move(Move::Place(Coordinate::new(0, 0)), Team::Two).unwrap();
+        board.perform_move(Move::Place(Coordinate::new(4, 0)), Team::Two).unwrap();
         board.set(Coordinate::new(6, 0), FieldState::Fish(1)).unwrap();
         board.set(Coordinate::new(8, 0), FieldState::Fish(1)).unwrap();
 
-        board.perform_move(Move::Place(Coordinate::new(5, 1)), Team::Two).unwrap();
+        board.perform_move(Move::Place(Coordinate::new(5, 1)), Team::One).unwrap();
         board.set(Coordinate::new(7, 1), FieldState::Fish(1)).unwrap();
 
         let state = State::from_initial_board_with_start_team_one(board);
         let actual = PenguinCutOffRater::rate(&state);
-        let expected = -50 + -2 + 1;
+        let expected = 50 + 2 - 1;
         assert_eq!(expected, actual);
     }
 }
