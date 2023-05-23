@@ -15,7 +15,7 @@ pub struct CoordinatesInDirectionIterator {
 }
 
 impl CoordinatesInDirectionIterator {
-    pub fn from(current_coordinate: Coordinate, direction: Direction) -> Self {
+    #[inline] pub fn from(current_coordinate: Coordinate, direction: Direction) -> Self {
         Self { current_coordinate, direction }
     }
 }
@@ -46,7 +46,7 @@ pub struct PenguinPossibleMoveIterator {
 }
 
 impl PenguinPossibleMoveIterator {
-    pub fn from(penguin: Penguin, board: Board) -> Self {
+    #[inline] pub fn from(penguin: Penguin, board: Board) -> Self {
         Self {
             start_coordinate: penguin.coordinate.clone(),
             board,

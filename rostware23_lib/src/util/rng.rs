@@ -28,11 +28,11 @@ fn gen_seed() -> u64 {
 }
 
 impl XorWow {
-    pub fn new() -> Self {
+    #[inline] pub fn new() -> Self {
         Self::from_seed(gen_seed())
     }
 
-    pub fn from_seed(seed: u64) -> Self {
+    #[inline] pub fn from_seed(seed: u64) -> Self {
         let mut xorwow = Self {
             state: [0, 0, 0, 0],
             counter: 0
@@ -41,7 +41,7 @@ impl XorWow {
         xorwow
     }
 
-    pub fn seed(&mut self, seed: u64) {
+    #[inline] pub fn seed(&mut self, seed: u64) {
         self.state = [
             0x70A7A712EAF07AA2 ^ seed,
             0xE96A320D4BC6BDDB ^ seed,
@@ -67,7 +67,7 @@ impl XorWow {
         t.wrapping_add(self.counter)
     }
 
-    pub fn next(&mut self, range: Range<u64>) -> u64 {
+    #[inline] pub fn next(&mut self, range: Range<u64>) -> u64 {
         let num_range = range.end - range.start + 1;
         let random = self.xorwow() % num_range as u64;
         random + range.start

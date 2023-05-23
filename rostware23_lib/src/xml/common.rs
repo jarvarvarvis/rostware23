@@ -8,7 +8,7 @@ pub enum Team {
 }
 
 impl Team {
-    pub fn opponent(&self) -> Self {
+    #[inline] pub fn opponent(&self) -> Self {
         match self {
             Team::One => Team::Two,
             Team::Two => Team::One,

@@ -14,13 +14,13 @@ pub struct PenguinBitset {
 }
 
 impl PenguinBitset {
-    pub fn empty() -> Self {
+    #[inline] pub fn empty() -> Self {
         Self {
             value: 0
         }
     }
 
-    pub fn get_penguin_count(&self) -> u64 {
+    #[inline] pub fn get_penguin_count(&self) -> u64 {
         self.value & PENGUIN_COUNT_BIT_MASK
     }
 
@@ -39,7 +39,7 @@ impl PenguinBitset {
         self.add_penguin_at_bit_position(coordinate, team_penguin_count);
     }
 
-    pub fn add_penguin(&mut self, penguin: Penguin) {
+    #[inline] pub fn add_penguin(&mut self, penguin: Penguin) {
         self.add_penguin_at_coordinate(penguin.coordinate);
     }
 
@@ -51,7 +51,7 @@ impl PenguinBitset {
         Coordinate::new(x * 2 + y % 2, y)
     }
 
-    pub fn move_penguin(&mut self, penguin: Penguin, to: Coordinate) -> anyhow::Result<()> {
+    #[inline] pub fn move_penguin(&mut self, penguin: Penguin, to: Coordinate) -> anyhow::Result<()> {
         let penguin_count = self.get_penguin_count();
         for index in 0..=penguin_count {
             if self.get_coords_at_bitset_index(index) == penguin.coordinate {
@@ -62,7 +62,7 @@ impl PenguinBitset {
         anyhow::bail!("Penguin {:?} doesn't exist", penguin)
     }
 
-    pub fn get_penguin(&self, coordinates: Coordinate, team: Team) -> anyhow::Result<Penguin> {
+    #[inline] pub fn get_penguin(&self, coordinates: Coordinate, team: Team) -> anyhow::Result<Penguin> {
         if !self.has_penguin_at(coordinates.clone()) {
             anyhow::bail!("No penguin at {:?}", coordinates);
         }
@@ -73,7 +73,7 @@ impl PenguinBitset {
         })
     }
 
-    pub fn has_penguin_at(&self, coordinates: Coordinate) -> bool {
+    #[inline] pub fn has_penguin_at(&self, coordinates: Coordinate) -> bool {
         let penguin_count = self.get_penguin_count();
         for index in 0..penguin_count {
             if self.get_coords_at_bitset_index(index) == coordinates {
@@ -92,7 +92,7 @@ pub struct PenguinBitsetIterator {
 }
 
 impl PenguinBitsetIterator {
-    pub fn from(bitset: PenguinBitset, team: Team) -> Self {
+    #[inline] pub fn from(bitset: PenguinBitset, team: Team) -> Self {
         Self { bitset, penguin_index: 0, team }
     }
 }

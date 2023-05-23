@@ -6,7 +6,7 @@ use crate::xml::result::GameResult as XmlGameResult;
 pub struct TeamAndPoints(Team, u32);
 
 impl TeamAndPoints {
-    pub fn new(team: Team, points: u32) -> Self {
+    #[inline] pub fn new(team: Team, points: u32) -> Self {
         Self(team, points)
     }
 }

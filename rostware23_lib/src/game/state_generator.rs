@@ -15,7 +15,7 @@ fn get_inverted_coordinate(coord: &Coordinate) -> Coordinate {
 
 // Implemented according to 
 // https://github.com/software-challenge/backend/blob/ae6b2bd4c0ce2127b29887fa0ce9554769322568/plugin/src/main/kotlin/sc/plugin2023/Board.kt
-pub fn create_board_from_seed(seed: u64) -> Board {
+#[inline] pub fn create_board_from_seed(seed: u64) -> Board {
     let mut board = Board::empty();
     
     let mut remaining_fish = (BOARD_WIDTH * BOARD_HEIGHT) as u32;
@@ -48,11 +48,11 @@ pub fn create_board_from_seed(seed: u64) -> Board {
     board
 }
 
-pub fn create_any_board() -> Board {
+#[inline] pub fn create_any_board() -> Board {
     create_board_from_seed(thread_rng().gen::<u64>()) 
 }
 
-pub fn create_any() -> State {
+#[inline] pub fn create_any() -> State {
     let board = create_any_board();
     State::from_initial_board_with_start_team_one(board)
 }

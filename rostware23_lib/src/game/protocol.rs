@@ -18,7 +18,7 @@ pub struct Protocol {
 }
 
 impl Protocol {
-    pub fn from_connection(connection: Connection) -> Self {
+    #[inline] pub fn from_connection(connection: Connection) -> Self {
         Self {
             connection,
             room_id: String::new(),
@@ -26,7 +26,7 @@ impl Protocol {
         }
     }
 
-    pub fn join_game(&mut self, join_kind: JoinKind) -> anyhow::Result<()> {
+    #[inline] pub fn join_game(&mut self, join_kind: JoinKind) -> anyhow::Result<()> {
         self.connection.write_string_slice(xml::connection::PROTOCOL_START)?;
         let join_data = match join_kind {
             JoinKind::Any => xml::serialize(xml::connection::Join)?,
@@ -38,11 +38,11 @@ impl Protocol {
         Ok(())
     }
 
-    pub fn deserialize_error(message: &str) -> anyhow::Result<xml::error::ErrorPacket> {
+    #[inline] pub fn deserialize_error(message: &str) -> anyhow::Result<xml::error::ErrorPacket> {
         xml::deserialize(message)
     }
 
-    pub fn read_message_after_join(&mut self) -> anyhow::Result<()> {
+    #[inline] pub fn read_message_after_join(&mut self) -> anyhow::Result<()> {
         let mut initial_message = self.connection.read_fully_into_string()?;
         
         // Remove <protocol>\n prefix
@@ -61,7 +61,7 @@ impl Protocol {
         Ok(())
     }
 
-    pub fn read_room_message(&mut self) -> anyhow::Result<xml::room::Room> {
+    #[inline] pub fn read_room_message(&mut self) -> anyhow::Result<xml::room::Room> {
         let room_message = self.connection.read_string_until_condition(&|text: &str| {
             return text.ends_with("</room>");
         })?;
@@ -73,7 +73,7 @@ impl Protocol {
         Ok(room.unwrap())
     }
 
-    pub fn read_welcome_message(&mut self) -> anyhow::Result<()> {
+    #[inline] pub fn read_welcome_message(&mut self) -> anyhow::Result<()> {
         let room = self.read_room_message()?;
         if room.room_id != self.room_id {
             anyhow::bail!("Expected room id {}, got {}", self.room_id, room.room_id);
@@ -93,7 +93,7 @@ impl Protocol {
         Ok(())
     }
 
-    pub fn send_move(&mut self, sent_move: Move) -> anyhow::Result<()> {
+    #[inline] pub fn send_move(&mut self, sent_move: Move) -> anyhow::Result<()> {
         let xml_move: xml::moves::Move = sent_move.into();
         let sent_room = xml::room::Room {
             room_id: self.room_id.clone(),

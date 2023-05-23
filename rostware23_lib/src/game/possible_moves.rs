@@ -13,13 +13,13 @@ pub struct PossibleMovesIterator {
 }
 
 impl PossibleMovesIterator {
-    pub fn empty() -> Self {
+    #[inline] pub fn empty() -> Self {
         Self {
             move_iter: Box::new(vec![].into_iter())
         }
     }
 
-    pub fn from_state_and_team(state: State, team: Team) -> Self {
+    #[inline] pub fn from_state_and_team(state: State, team: Team) -> Self {
         let penguins_placed = state.board.get_penguin_iterator(team).count();
         if penguins_placed >= MAX_PENGUIN_COUNT_FOR_SINGLE_TEAM {
             Self::make_normal_moves_iterator_for_team(state, team)
@@ -28,7 +28,7 @@ impl PossibleMovesIterator {
         }
     }
 
-    pub fn make_normal_moves_iterator_for_team(state: State, team: Team) -> Self {
+    #[inline] pub fn make_normal_moves_iterator_for_team(state: State, team: Team) -> Self {
         let penguin_iterator = state.board.get_penguin_iterator(team)
             .flat_map(move |penguin| PenguinPossibleMoveIterator::from(penguin, state.board.clone()));
 
