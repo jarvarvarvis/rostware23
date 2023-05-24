@@ -17,6 +17,7 @@ pub mod vec_penguin_restrictions;
 pub mod restricted_reachable_fish_rater;
 pub mod quadrant_occupation_rater;
 pub mod penguin_cutoff_rater;
+pub mod edge_penguin_penalty;
 
 use rostware23_lib::game::state::State;
 use rostware23_lib::game::moves::Move;
