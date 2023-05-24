@@ -12,7 +12,7 @@ pub struct CombinedRater {}
 
 impl Rater for CombinedRater {
     fn rate(state: &State) -> i32 {
-        StagedRater::<0, 11, 11, FishDifferenceRater>::rate(state) +
+        StagedRater::<0, 11, 20, FishDifferenceRater>::rate(state) +
             2 * PenguinCutOffRater::rate(state) +
             10 * QuadrantOccupationRater::rate(state) +
             5 * ReachableFishRater::rate(state) +
