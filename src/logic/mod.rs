@@ -3,7 +3,7 @@ pub mod time_measurer;
 pub mod random_getter;
 pub mod pvs_getter;
 
-pub mod early_game_rater;
+pub mod staged_rater;
 pub mod combined_rater;
 
 pub mod fish_difference_rater;
