@@ -44,7 +44,9 @@ impl<Heuristic: Rater> PVSMoveGetter<Heuristic> {
         let mut best_move = possible_moves.next();
         let mut best_score = lower_bound;
         match best_move.clone() {
-            None => {best_score = -Self::pvs(game_state.with_moveless_player_skipped()?, depth - 1, -upper_bound, -best_score, time_measurer)?.rating;}
+            None => {
+                best_score = -Self::pvs(game_state.with_moveless_player_skipped()?, depth - 1, -upper_bound, -best_score, time_measurer)?.rating;
+            },
             Some(first_move) => {
                 let next_game_state = game_state.with_move_performed(first_move.clone())?;
                 best_score = -Self::pvs(next_game_state, depth - 1, -upper_bound, -best_score, time_measurer)?.rating;
@@ -55,8 +57,9 @@ impl<Heuristic: Rater> PVSMoveGetter<Heuristic> {
             let mut current_score: i32 = -Self::pvs(next_game_state.clone(), depth - 1, -best_score - 1, -best_score, time_measurer)?.rating; // zero-window search
             if current_score > lower_bound && current_score < upper_bound {
                 // detailed search if zero-window search passes
-                current_score = -Self::pvs(next_game_state, depth - 1, -upper_bound, -best_score, time_measurer)?.rating;
+                current_score = -Self::pvs(next_game_state, depth - 1, -upper_bound, -current_score, time_measurer)?.rating;
             }
+
             if current_score > best_score {
                 best_move = Some(current_move.clone());
                 best_score = current_score;
