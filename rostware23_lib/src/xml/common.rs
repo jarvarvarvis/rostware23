@@ -8,7 +8,7 @@ pub enum Team {
 }
 
 impl Team {
-     pub fn opponent(&self) -> Self {
+    pub fn opponent(&self) -> Self {
         match self {
             Team::One => Team::Two,
             Team::Two => Team::One,
@@ -18,8 +18,8 @@ impl Team {
 
 #[cfg(test)]
 mod tests {
-    use crate::xml::*;
     use super::*;
+    use crate::xml::*;
 
     #[test]
     fn deserialize_team_inside_other_type() {
@@ -27,7 +27,7 @@ mod tests {
         #[xml(rename = "test")]
         struct TestStruct {
             #[xml(direct)]
-            team: Team
+            team: Team,
         }
 
         let test_data = "<test>ONE</test>";

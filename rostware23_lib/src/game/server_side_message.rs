@@ -1,13 +1,13 @@
+use crate::game::result::GameResult;
+use crate::game::state::State;
 use crate::xml::data::DataClass;
 use crate::xml::room::Room;
-use crate::game::state::State;
-use crate::game::result::GameResult;
 
 #[derive(Debug, PartialEq, Eq)]
 pub enum ServerSideMessage {
     MoveRequest,
     Memento(super::state::State),
-    Result(super::result::GameResult)
+    Result(super::result::GameResult),
 }
 
 impl TryFrom<Room> for ServerSideMessage {

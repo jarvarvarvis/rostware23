@@ -10,7 +10,7 @@ pub struct OriginalRequest {
     pub room_id: Option<String>,
 
     #[xml(attribute, rename = "reservationCode")]
-    pub reservation_code: Option<String>
+    pub reservation_code: Option<String>,
 }
 
 #[derive(Debug, FromXml, Eq, PartialEq)]
@@ -19,13 +19,13 @@ pub struct ErrorPacket {
     #[xml(attribute)]
     pub message: String,
 
-    pub original_request: Option<OriginalRequest>
+    pub original_request: Option<OriginalRequest>,
 }
 
 #[cfg(test)]
 mod tests {
-    use crate::xml::*;
     use super::*;
+    use crate::xml::*;
 
     #[test]
     fn deserialize_unknown_reservation() {
@@ -50,12 +50,14 @@ mod tests {
             <originalRequest class="joinRoom" roomId="amogus"/>
         </errorpacket>"#;
         let expected = ErrorPacket {
-            message: "sc.api.plugins.exceptions.GameRoomException: Couldn't find a room with id amogus".to_string(),
-            original_request: Some(OriginalRequest { 
+            message:
+                "sc.api.plugins.exceptions.GameRoomException: Couldn't find a room with id amogus"
+                    .to_string(),
+            original_request: Some(OriginalRequest {
                 class: "joinRoom".to_string(),
                 room_id: Some("amogus".to_string()),
-                reservation_code: None
-            })
+                reservation_code: None,
+            }),
         };
         let actual = deserialize(packet).unwrap();
         assert_eq!(expected, actual);

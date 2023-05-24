@@ -6,18 +6,18 @@ use super::common;
 #[xml(rename = "startTeam")]
 pub struct StartTeam {
     #[xml(direct)]
-    pub team: common::Team
+    pub team: common::Team,
 }
 
 #[derive(Debug, Clone, Eq, PartialEq)]
 pub enum FieldState {
     Empty,
     Fish(u32),
-    Team(common::Team)
+    Team(common::Team),
 }
 
 impl FieldState {
-     pub fn get_fish_count(&self) -> anyhow::Result<u32> {
+    pub fn get_fish_count(&self) -> anyhow::Result<u32> {
         match self {
             FieldState::Empty => Ok(0),
             FieldState::Fish(fish_count) => Ok(*fish_count),
@@ -30,7 +30,7 @@ impl<'xml> FromXml<'xml> for FieldState {
     fn matches(id: instant_xml::Id<'_>, field: Option<instant_xml::Id<'_>>) -> bool {
         match field {
             Some(field) => id == field,
-            None => false
+            None => false,
         }
     }
 
@@ -56,10 +56,11 @@ impl<'xml> FromXml<'xml> for FieldState {
             "4" => FieldState::Fish(4),
             "ONE" => FieldState::Team(common::Team::One),
             "TWO" => FieldState::Team(common::Team::Two),
-            other =>
-                return Err(instant_xml::Error::UnexpectedValue(
-                        format!("Unable to parse field state from '{other}' for {field}")
-                ))
+            other => {
+                return Err(instant_xml::Error::UnexpectedValue(format!(
+                    "Unable to parse field state from '{other}' for {field}"
+                )))
+            }
         };
         *into = Some(value);
         Ok(())
@@ -75,9 +76,9 @@ impl ToXml for FieldState {
         _: Option<instant_xml::Id<'_>>,
         _: &mut instant_xml::Serializer<W>,
     ) -> Result<(), instant_xml::Error> {
-        Err(instant_xml::Error::Other(
-                format!("FieldState is not supposed to be serialized")
-        ))
+        Err(instant_xml::Error::Other(format!(
+            "FieldState is not supposed to be serialized"
+        )))
     }
 }
 
@@ -88,13 +89,13 @@ pub struct Field(pub FieldState);
 #[derive(FromXml, ToXml, Debug, Eq, PartialEq)]
 #[xml(rename = "list")]
 pub struct FieldRow {
-    pub fields: Vec<Field>
+    pub fields: Vec<Field>,
 }
 
 #[derive(FromXml, ToXml, Debug, Eq, PartialEq)]
 #[xml(rename = "board")]
 pub struct Board {
-    pub rows: Vec<FieldRow>
+    pub rows: Vec<FieldRow>,
 }
 
 #[derive(FromXml, ToXml, Debug, Eq, PartialEq)]
@@ -104,7 +105,7 @@ pub struct FishEntry(pub u32);
 #[derive(FromXml, ToXml, Debug, Eq, PartialEq)]
 #[xml(rename = "fishes")]
 pub struct Fishes {
-    pub entries: Vec<FishEntry>
+    pub entries: Vec<FishEntry>,
 }
 
 #[derive(FromXml, ToXml, Debug, Eq, PartialEq)]
@@ -121,13 +122,15 @@ pub struct State {
 
 #[cfg(test)]
 mod tests {
-    use crate::xml::*;
     use super::*;
+    use crate::xml::*;
 
     #[test]
     fn deserialize_start_team() {
         let start_team = r#"<startTeam>ONE</startTeam>"#;
-        let expected = StartTeam { team: common::Team::One };
+        let expected = StartTeam {
+            team: common::Team::One,
+        };
         let actual = deserialize(start_team).unwrap();
         assert_eq!(expected, actual);
     }
@@ -178,7 +181,7 @@ mod tests {
                 Field(FieldState::Fish(3)),
                 Field(FieldState::Team(common::Team::Two)),
                 Field(FieldState::Team(common::Team::One)),
-            ]
+            ],
         };
         let actual = deserialize(field_row).unwrap();
         assert_eq!(expected, actual);
@@ -210,23 +213,23 @@ mod tests {
                         Field(FieldState::Fish(1)),
                         Field(FieldState::Fish(2)),
                         Field(FieldState::Fish(2)),
-                    ]
+                    ],
                 },
                 FieldRow {
                     fields: vec![
                         Field(FieldState::Fish(2)),
                         Field(FieldState::Team(common::Team::One)),
                         Field(FieldState::Fish(2)),
-                    ]
+                    ],
                 },
                 FieldRow {
                     fields: vec![
                         Field(FieldState::Team(common::Team::Two)),
                         Field(FieldState::Fish(4)),
                         Field(FieldState::Fish(1)),
-                    ]
-                }
-            ]
+                    ],
+                },
+            ],
         };
         let actual = deserialize(board).unwrap();
         assert_eq!(expected, actual);
@@ -268,30 +271,27 @@ mod tests {
                             Field(FieldState::Fish(1)),
                             Field(FieldState::Fish(2)),
                             Field(FieldState::Fish(2)),
-                        ]
+                        ],
                     },
                     FieldRow {
                         fields: vec![
                             Field(FieldState::Fish(2)),
                             Field(FieldState::Team(common::Team::One)),
                             Field(FieldState::Fish(2)),
-                        ]
+                        ],
                     },
                     FieldRow {
                         fields: vec![
                             Field(FieldState::Team(common::Team::Two)),
                             Field(FieldState::Fish(4)),
                             Field(FieldState::Fish(1)),
-                        ]
-                    }
-                ]
+                        ],
+                    },
+                ],
             },
             fishes: Fishes {
-                entries: vec![
-                    FishEntry(4), 
-                    FishEntry(31)
-                ]
-            }
+                entries: vec![FishEntry(4), FishEntry(31)],
+            },
         };
         let actual = deserialize(board).unwrap();
         assert_eq!(expected, actual);

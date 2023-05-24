@@ -1,14 +1,14 @@
-use std::thread;
-use std::ops::Range;
 use std::collections::hash_map::DefaultHasher;
+use std::hash::{Hash, Hasher};
+use std::ops::Range;
+use std::thread;
 use std::time::SystemTime;
-use std::hash::{Hasher, Hash};
 
 // Very simple xorwow RNG implementation because I didn't find a crate
 // that did what I wanted
 pub struct XorWow {
     state: [u64; 4],
-    counter: u64
+    counter: u64,
 }
 
 fn get_time_msec() -> u64 {
@@ -28,25 +28,25 @@ fn gen_seed() -> u64 {
 }
 
 impl XorWow {
-     pub fn new() -> Self {
+    pub fn new() -> Self {
         Self::from_seed(gen_seed())
     }
 
-     pub fn from_seed(seed: u64) -> Self {
+    pub fn from_seed(seed: u64) -> Self {
         let mut xorwow = Self {
             state: [0, 0, 0, 0],
-            counter: 0
+            counter: 0,
         };
         xorwow.seed(seed);
         xorwow
     }
 
-     pub fn seed(&mut self, seed: u64) {
+    pub fn seed(&mut self, seed: u64) {
         self.state = [
             0x70A7A712EAF07AA2 ^ seed,
             0xE96A320D4BC6BDDB ^ seed,
             0xBC78C1658C9333BF ^ seed,
-            0xBE5B64076E942A9E ^ seed
+            0xBE5B64076E942A9E ^ seed,
         ];
         self.counter = 100;
     }
@@ -67,7 +67,7 @@ impl XorWow {
         t.wrapping_add(self.counter)
     }
 
-     pub fn next(&mut self, range: Range<u64>) -> u64 {
+    pub fn next(&mut self, range: Range<u64>) -> u64 {
         let num_range = range.end - range.start + 1;
         let random = self.xorwow() % num_range as u64;
         random + range.start

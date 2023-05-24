@@ -1,9 +1,9 @@
 use instant_xml::{FromXml, ToXml};
 
 use super::common;
-use super::state;
 use super::moves;
 use super::result;
+use super::state;
 
 #[derive(FromXml, ToXml, Debug, Eq, PartialEq)]
 #[xml(scalar, rename_all = "camelCase")]
@@ -28,14 +28,13 @@ pub struct Data {
 
     pub sent_move: Option<moves::Move>,
 
-    pub result: Option<result::GameResult>
-
+    pub result: Option<result::GameResult>,
 }
 
 #[cfg(test)]
 mod tests {
-    use crate::xml::*;
     use super::*;
+    use crate::xml::*;
 
     #[test]
     fn deserialize_data_welcome_message() {
@@ -45,7 +44,7 @@ mod tests {
             color: Some(common::Team::One),
             state: None,
             sent_move: None,
-            result: None
+            result: None,
         };
         let actual = deserialize(welcome_message).unwrap();
         assert_eq!(expected, actual);
@@ -59,7 +58,7 @@ mod tests {
             state: None,
             color: None,
             sent_move: None,
-            result: None
+            result: None,
         };
         let actual = deserialize(welcome_message).unwrap();
         assert_eq!(expected, actual);
@@ -73,7 +72,7 @@ mod tests {
             state: None,
             color: None,
             sent_move: None,
-            result: None
+            result: None,
         };
         let actual = deserialize(welcome_message).unwrap();
         assert_eq!(expected, actual);
@@ -87,7 +86,7 @@ mod tests {
             state: None,
             color: None,
             sent_move: None,
-            result: None
+            result: None,
         };
         let actual = deserialize(welcome_message).unwrap();
         assert_eq!(expected, actual);

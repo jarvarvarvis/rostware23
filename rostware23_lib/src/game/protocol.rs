@@ -2,23 +2,23 @@ use crate::xml;
 
 use super::common;
 use super::moves::Move;
-use super::server::Connection;
 use super::protocol_error::*;
+use super::server::Connection;
 
 pub enum JoinKind {
     Any,
     Room(String),
-    Reservation(String)
+    Reservation(String),
 }
 
 pub struct Protocol {
     pub connection: Connection,
     pub room_id: String,
-    pub own_team: Option<common::Team>
+    pub own_team: Option<common::Team>,
 }
 
 impl Protocol {
-     pub fn from_connection(connection: Connection) -> Self {
+    pub fn from_connection(connection: Connection) -> Self {
         Self {
             connection,
             room_id: String::new(),
@@ -26,25 +26,28 @@ impl Protocol {
         }
     }
 
-     pub fn join_game(&mut self, join_kind: JoinKind) -> anyhow::Result<()> {
-        self.connection.write_string_slice(xml::connection::PROTOCOL_START)?;
+    pub fn join_game(&mut self, join_kind: JoinKind) -> anyhow::Result<()> {
+        self.connection
+            .write_string_slice(xml::connection::PROTOCOL_START)?;
         let join_data = match join_kind {
             JoinKind::Any => xml::serialize(xml::connection::Join)?,
             JoinKind::Room(room_id) => xml::serialize(xml::connection::JoinRoom { room_id })?,
-            JoinKind::Reservation(reservation_code) => xml::serialize(xml::connection::JoinPrepared { reservation_code })?,
+            JoinKind::Reservation(reservation_code) => {
+                xml::serialize(xml::connection::JoinPrepared { reservation_code })?
+            }
         };
         self.connection.write_string(join_data)?;
         self.connection.flush_writer()?;
         Ok(())
     }
 
-     pub fn deserialize_error(message: &str) -> anyhow::Result<xml::error::ErrorPacket> {
+    pub fn deserialize_error(message: &str) -> anyhow::Result<xml::error::ErrorPacket> {
         xml::deserialize(message)
     }
 
-     pub fn read_message_after_join(&mut self) -> anyhow::Result<()> {
+    pub fn read_message_after_join(&mut self) -> anyhow::Result<()> {
         let mut initial_message = self.connection.read_fully_into_string()?;
-        
+
         // Remove <protocol>\n prefix
         initial_message = initial_message.replace("<protocol>\n", "");
 
@@ -61,7 +64,7 @@ impl Protocol {
         Ok(())
     }
 
-     pub fn read_room_message(&mut self) -> anyhow::Result<xml::room::Room> {
+    pub fn read_room_message(&mut self) -> anyhow::Result<xml::room::Room> {
         let room_message = self.connection.read_string_until_condition(&|text: &str| {
             return text.ends_with("</room>");
         })?;
@@ -73,14 +76,18 @@ impl Protocol {
         Ok(room.unwrap())
     }
 
-     pub fn read_welcome_message(&mut self) -> anyhow::Result<()> {
+    pub fn read_welcome_message(&mut self) -> anyhow::Result<()> {
         let room = self.read_room_message()?;
         if room.room_id != self.room_id {
             anyhow::bail!("Expected room id {}, got {}", self.room_id, room.room_id);
         }
 
         if room.data.class != xml::data::DataClass::WelcomeMessage {
-            anyhow::bail!("Expected data class {:?}, got {:?}", xml::data::DataClass::WelcomeMessage, room.data.class);
+            anyhow::bail!(
+                "Expected data class {:?}, got {:?}",
+                xml::data::DataClass::WelcomeMessage,
+                room.data.class
+            );
         }
 
         if room.data.color.is_none() {
@@ -93,7 +100,7 @@ impl Protocol {
         Ok(())
     }
 
-     pub fn send_move(&mut self, sent_move: Move) -> anyhow::Result<()> {
+    pub fn send_move(&mut self, sent_move: Move) -> anyhow::Result<()> {
         let xml_move: xml::moves::Move = sent_move.into();
         let sent_room = xml::room::Room {
             room_id: self.room_id.clone(),

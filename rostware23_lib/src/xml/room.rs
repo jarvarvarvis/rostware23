@@ -9,13 +9,13 @@ pub struct Room {
     pub room_id: String,
 
     #[xml(rename = "data")]
-    pub data: Data
+    pub data: Data,
 }
 
 #[cfg(test)]
 mod tests {
-    use crate::xml::*;
     use super::*;
+    use crate::xml::*;
 
     #[test]
     fn deserialize_welcome_message() {
@@ -30,7 +30,7 @@ mod tests {
                 state: None,
                 sent_move: None,
                 result: None,
-            }
+            },
         };
         let actual = deserialize(welcome_message).unwrap();
         assert_eq!(expected, actual);
@@ -49,7 +49,7 @@ mod tests {
                 state: None,
                 sent_move: None,
                 result: None,
-            }
+            },
         };
         let actual = deserialize(welcome_message).unwrap();
         assert_eq!(expected, actual);

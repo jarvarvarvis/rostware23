@@ -2,12 +2,11 @@ use instant_xml::{FromXml, ToXml};
 
 use super::common;
 
-
 #[derive(FromXml, ToXml, Debug, Eq, PartialEq)]
 #[xml(scalar, rename_all = "UPPERCASE")]
 pub enum AggregationKind {
     Sum,
-    Average
+    Average,
 }
 
 #[derive(FromXml, ToXml, Debug, Eq, PartialEq)]
@@ -25,14 +24,14 @@ pub struct Fragment {
     pub name: String,
 
     pub aggregation: Aggregation,
-    pub relevant_for_ranking: RelevantForRanking
+    pub relevant_for_ranking: RelevantForRanking,
 }
 
 #[derive(FromXml, ToXml, Debug, Eq, PartialEq)]
 #[xml(rename = "definition")]
 pub struct Definition {
     #[xml(rename = "fragment")]
-    pub fragments: Vec<Fragment>
+    pub fragments: Vec<Fragment>,
 }
 
 #[derive(FromXml, ToXml, Debug, Eq, PartialEq)]
@@ -42,7 +41,7 @@ pub struct ScoresEntryPlayer {
     pub name: Option<String>,
 
     #[xml(attribute)]
-    pub team: common::Team
+    pub team: common::Team,
 }
 
 #[derive(FromXml, ToXml, Debug, Eq, PartialEq)]
@@ -59,28 +58,28 @@ pub struct ScoresEntryScore {
     pub reason: String,
 
     #[xml(rename = "part")]
-    pub parts: Vec<ScorePart>
+    pub parts: Vec<ScorePart>,
 }
 
 #[derive(FromXml, ToXml, Debug, Eq, PartialEq)]
 #[xml(rename = "entry")]
 pub struct ScoresEntry {
     pub player: ScoresEntryPlayer,
-    pub score: ScoresEntryScore
+    pub score: ScoresEntryScore,
 }
 
 #[derive(FromXml, ToXml, Debug, Eq, PartialEq)]
 #[xml(rename = "scores")]
 pub struct Scores {
     #[xml(rename = "entry")]
-    pub entries: Vec<ScoresEntry>
+    pub entries: Vec<ScoresEntry>,
 }
 
 #[derive(FromXml, ToXml, Debug, Eq, PartialEq)]
 #[xml(rename = "winner")]
 pub struct Winner {
     #[xml(attribute)]
-    pub team: common::Team
+    pub team: common::Team,
 }
 
 #[derive(FromXml, ToXml, Debug, Eq, PartialEq)]
@@ -88,13 +87,13 @@ pub struct Winner {
 pub struct GameResult {
     pub definition: Definition,
     pub scores: Scores,
-    pub winner: Option<Winner>
+    pub winner: Option<Winner>,
 }
 
 #[cfg(test)]
 mod tests {
-    use crate::xml::*;
     use super::*;
+    use crate::xml::*;
 
     #[test]
     fn deserialize_aggregation() {
@@ -118,10 +117,10 @@ mod tests {
             <aggregation>AVERAGE</aggregation>
             <relevantForRanking>true</relevantForRanking>
         </fragment>"#;
-        let expected = Fragment { 
-            name: "∅ Punkte".to_string(), 
-            aggregation: Aggregation(AggregationKind::Average), 
-            relevant_for_ranking: RelevantForRanking(true)
+        let expected = Fragment {
+            name: "∅ Punkte".to_string(),
+            aggregation: Aggregation(AggregationKind::Average),
+            relevant_for_ranking: RelevantForRanking(true),
         };
         let actual = deserialize(fragment).unwrap();
         assert_eq!(expected, actual);
@@ -144,14 +143,14 @@ mod tests {
                 Fragment {
                     name: "Siegpunkte".to_string(),
                     aggregation: Aggregation(AggregationKind::Sum),
-                    relevant_for_ranking: RelevantForRanking(true)
+                    relevant_for_ranking: RelevantForRanking(true),
                 },
                 Fragment {
                     name: "∅ Punkte".to_string(),
                     aggregation: Aggregation(AggregationKind::Average),
-                    relevant_for_ranking: RelevantForRanking(true)
-                }
-            ]
+                    relevant_for_ranking: RelevantForRanking(true),
+                },
+            ],
         };
         let actual = deserialize(definition).unwrap();
         assert_eq!(expected, actual);
@@ -160,9 +159,9 @@ mod tests {
     #[test]
     fn deserialize_score_entry_player() {
         let player = r#"<player name="amogus" team="TWO"/>"#;
-        let expected = ScoresEntryPlayer { 
+        let expected = ScoresEntryPlayer {
             name: Some("amogus".to_string()),
-            team: common::Team::Two
+            team: common::Team::Two,
         };
         let actual = deserialize(player).unwrap();
         assert_eq!(expected, actual);
@@ -185,7 +184,7 @@ mod tests {
         let expected = ScoresEntryScore {
             cause: "LEFT".to_string(),
             reason: "Player left".to_string(),
-            parts: vec![ ScorePart(0), ScorePart(15) ]
+            parts: vec![ScorePart(0), ScorePart(15)],
         };
         let actual = deserialize(score).unwrap();
         assert_eq!(expected, actual);
@@ -212,28 +211,28 @@ mod tests {
         let expected = Scores {
             entries: vec![
                 ScoresEntry {
-                    player: ScoresEntryPlayer { name: Some("A Team".to_string()), team: common::Team::One },
-                    score: ScoresEntryScore { 
-                        cause: "REGULAR".to_string(), 
-                        reason: "".to_string(), 
-                        parts: vec![
-                            ScorePart(2),
-                            ScorePart(27)
-                        ]
-                    }
+                    player: ScoresEntryPlayer {
+                        name: Some("A Team".to_string()),
+                        team: common::Team::One,
+                    },
+                    score: ScoresEntryScore {
+                        cause: "REGULAR".to_string(),
+                        reason: "".to_string(),
+                        parts: vec![ScorePart(2), ScorePart(27)],
+                    },
                 },
                 ScoresEntry {
-                    player: ScoresEntryPlayer { name: Some("B Team".to_string()), team: common::Team::Two },
-                    score: ScoresEntryScore { 
-                        cause: "LEFT".to_string(), 
-                        reason: "Player left".to_string(), 
-                        parts: vec![
-                            ScorePart(0),
-                            ScorePart(15)
-                        ]
-                    }
+                    player: ScoresEntryPlayer {
+                        name: Some("B Team".to_string()),
+                        team: common::Team::Two,
+                    },
+                    score: ScoresEntryScore {
+                        cause: "LEFT".to_string(),
+                        reason: "Player left".to_string(),
+                        parts: vec![ScorePart(0), ScorePart(15)],
+                    },
                 },
-            ]
+            ],
         };
         let actual = deserialize(scores).unwrap();
         assert_eq!(expected, actual);
@@ -242,7 +241,9 @@ mod tests {
     #[test]
     fn deserialize_winner() {
         let winner = r#"<winner team="ONE"/>"#;
-        let expected = Winner { team: common::Team::One };
+        let expected = Winner {
+            team: common::Team::One,
+        };
         let actual = deserialize(winner).unwrap();
         assert_eq!(expected, actual);
     }
@@ -289,42 +290,44 @@ mod tests {
                         Fragment {
                             name: "Siegpunkte".to_string(),
                             aggregation: Aggregation(AggregationKind::Sum),
-                            relevant_for_ranking: RelevantForRanking(true)
+                            relevant_for_ranking: RelevantForRanking(true),
                         },
                         Fragment {
                             name: "∅ Punkte".to_string(),
                             aggregation: Aggregation(AggregationKind::Average),
-                            relevant_for_ranking: RelevantForRanking(true)
-                        }
-                    ]
+                            relevant_for_ranking: RelevantForRanking(true),
+                        },
+                    ],
                 },
                 scores: Scores {
                     entries: vec![
                         ScoresEntry {
-                            player: ScoresEntryPlayer { name: Some("A Team".to_string()), team: common::Team::One },
-                            score: ScoresEntryScore { 
-                                cause: "REGULAR".to_string(), 
-                                reason: "".to_string(), 
-                                parts: vec![
-                                    ScorePart(2),
-                                    ScorePart(27)
-                                ]
-                            }
+                            player: ScoresEntryPlayer {
+                                name: Some("A Team".to_string()),
+                                team: common::Team::One,
+                            },
+                            score: ScoresEntryScore {
+                                cause: "REGULAR".to_string(),
+                                reason: "".to_string(),
+                                parts: vec![ScorePart(2), ScorePart(27)],
+                            },
                         },
                         ScoresEntry {
-                            player: ScoresEntryPlayer { name: Some("B Team".to_string()), team: common::Team::Two },
-                            score: ScoresEntryScore { 
-                                cause: "LEFT".to_string(), 
-                                reason: "Player left".to_string(), 
-                                parts: vec![
-                                    ScorePart(0),
-                                    ScorePart(15)
-                                ]
-                            }
+                            player: ScoresEntryPlayer {
+                                name: Some("B Team".to_string()),
+                                team: common::Team::Two,
+                            },
+                            score: ScoresEntryScore {
+                                cause: "LEFT".to_string(),
+                                reason: "Player left".to_string(),
+                                parts: vec![ScorePart(0), ScorePart(15)],
+                            },
                         },
-                    ]
+                    ],
                 },
-                winner: Some(Winner { team: common::Team::One })
+                winner: Some(Winner {
+                    team: common::Team::One,
+                }),
             }),
         };
         let actual = deserialize(result).unwrap();

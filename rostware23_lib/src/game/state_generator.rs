@@ -1,7 +1,7 @@
 use rand::prelude::*;
 
-use crate::game::common::*;
 use crate::game::board::*;
+use crate::game::common::*;
 use crate::game::state::*;
 use crate::util::rng::*;
 
@@ -13,11 +13,11 @@ fn get_inverted_coordinate(coord: &Coordinate) -> Coordinate {
     Coordinate::new(x, y)
 }
 
-// Implemented according to 
+// Implemented according to
 // https://github.com/software-challenge/backend/blob/ae6b2bd4c0ce2127b29887fa0ce9554769322568/plugin/src/main/kotlin/sc/plugin2023/Board.kt
- pub fn create_board_from_seed(seed: u64) -> Board {
+pub fn create_board_from_seed(seed: u64) -> Board {
     let mut board = Board::empty();
-    
+
     let mut remaining_fish = (BOARD_WIDTH * BOARD_HEIGHT) as u32;
     let mut rng = XorWow::from_seed(seed);
     let mut current_holes = MAX_HOLES_PER_BOARD;
@@ -41,18 +41,20 @@ fn get_inverted_coordinate(coord: &Coordinate) -> Coordinate {
 
             // Insert in board's upper and lower half
             board.set(coordinate, FieldState::Fish(fish)).unwrap();
-            board.set(inverted_coordinate, FieldState::Fish(fish)).unwrap();
+            board
+                .set(inverted_coordinate, FieldState::Fish(fish))
+                .unwrap();
         }
     }
 
     board
 }
 
- pub fn create_any_board() -> Board {
-    create_board_from_seed(thread_rng().gen::<u64>()) 
+pub fn create_any_board() -> Board {
+    create_board_from_seed(thread_rng().gen::<u64>())
 }
 
- pub fn create_any() -> State {
+pub fn create_any() -> State {
     let board = create_any_board();
     State::from_initial_board_with_start_team_one(board)
 }

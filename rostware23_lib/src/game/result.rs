@@ -6,7 +6,7 @@ use crate::xml::result::GameResult as XmlGameResult;
 pub struct TeamAndPoints(Team, u32);
 
 impl TeamAndPoints {
-     pub fn new(team: Team, points: u32) -> Self {
+    pub fn new(team: Team, points: u32) -> Self {
         Self(team, points)
     }
 }
@@ -14,7 +14,7 @@ impl TeamAndPoints {
 #[derive(Debug, Eq, PartialEq)]
 pub struct GameResult {
     pub winner: Option<Team>,
-    pub points: (TeamAndPoints, TeamAndPoints)
+    pub points: (TeamAndPoints, TeamAndPoints),
 }
 
 impl From<XmlGameResult> for GameResult {
@@ -26,8 +26,8 @@ impl From<XmlGameResult> for GameResult {
             winner: result.winner.map(|winner| winner.team),
             points: (
                 TeamAndPoints(first_entry.player.team, first_entry.score.parts[1].0),
-                TeamAndPoints(second_entry.player.team, second_entry.score.parts[1].0)
-            )
+                TeamAndPoints(second_entry.player.team, second_entry.score.parts[1].0),
+            ),
         }
     }
 }
@@ -36,11 +36,8 @@ impl From<XmlGameResult> for GameResult {
 mod tests {
     use super::*;
     use crate::xml::result::{
-        Aggregation, AggregationKind, 
-        Definition, Fragment, 
-        Scores, ScoresEntry, ScoresEntryPlayer, ScoresEntryScore, ScorePart,
-        RelevantForRanking,
-        Winner
+        Aggregation, AggregationKind, Definition, Fragment, RelevantForRanking, ScorePart, Scores,
+        ScoresEntry, ScoresEntryPlayer, ScoresEntryScore, Winner,
     };
 
     #[test]
@@ -51,42 +48,42 @@ mod tests {
                     Fragment {
                         name: "Siegpunkte".to_string(),
                         aggregation: Aggregation(AggregationKind::Sum),
-                        relevant_for_ranking: RelevantForRanking(true)
+                        relevant_for_ranking: RelevantForRanking(true),
                     },
                     Fragment {
                         name: "∅ Punkte".to_string(),
                         aggregation: Aggregation(AggregationKind::Average),
-                        relevant_for_ranking: RelevantForRanking(true)
-                    }
-                ]
+                        relevant_for_ranking: RelevantForRanking(true),
+                    },
+                ],
             },
             scores: Scores {
                 entries: vec![
                     ScoresEntry {
-                        player: ScoresEntryPlayer { name: Some("A Team".to_string()), team: Team::One },
-                        score: ScoresEntryScore { 
-                            cause: "REGULAR".to_string(), 
-                            reason: "".to_string(), 
-                            parts: vec![
-                                ScorePart(2),
-                                ScorePart(27)
-                            ]
-                        }
+                        player: ScoresEntryPlayer {
+                            name: Some("A Team".to_string()),
+                            team: Team::One,
+                        },
+                        score: ScoresEntryScore {
+                            cause: "REGULAR".to_string(),
+                            reason: "".to_string(),
+                            parts: vec![ScorePart(2), ScorePart(27)],
+                        },
                     },
                     ScoresEntry {
-                        player: ScoresEntryPlayer { name: Some("B Team".to_string()), team: Team::Two },
-                        score: ScoresEntryScore { 
-                            cause: "LEFT".to_string(), 
-                            reason: "Player left".to_string(), 
-                            parts: vec![
-                                ScorePart(0),
-                                ScorePart(15)
-                            ]
-                        }
+                        player: ScoresEntryPlayer {
+                            name: Some("B Team".to_string()),
+                            team: Team::Two,
+                        },
+                        score: ScoresEntryScore {
+                            cause: "LEFT".to_string(),
+                            reason: "Player left".to_string(),
+                            parts: vec![ScorePart(0), ScorePart(15)],
+                        },
                     },
-                ]
+                ],
             },
-            winner: Some(Winner { team: Team::One })
+            winner: Some(Winner { team: Team::One }),
         };
         let expected = GameResult {
             winner: Some(Team::One),
