@@ -5,7 +5,7 @@ pub struct BoardCoordinateIterator {
 }
 
 impl BoardCoordinateIterator {
-    #[inline] pub fn new() -> Self {
+     pub fn new() -> Self {
         Self { last: Coordinate::new(0, 0) }
     }
 }

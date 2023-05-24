@@ -9,37 +9,37 @@ pub const RIGHTMOST_X: u64 = BOARD_WIDTH * 2 - 1;
 pub struct Vector(i64, i64);
 
 impl Vector {
-    #[inline] pub fn new(x: i64, y: i64) -> Self {
+     pub fn new(x: i64, y: i64) -> Self {
         Self(x, y)
     }
 
-    #[inline] pub fn between_coordinates(first: Coordinate, second: Coordinate) -> Self {
+     pub fn between_coordinates(first: Coordinate, second: Coordinate) -> Self {
         Self(first.x() as i64 - second.x() as i64, first.y() as i64 - second.y() as i64)
     }
 
-    #[inline] pub fn scale(&self, scalar: i64) -> Self {
+     pub fn scale(&self, scalar: i64) -> Self {
         Self(self.x() * scalar, self.y() * scalar)
     }
 
-    #[inline] pub fn scalar_product(&self, other: Vector) -> i64 {
+     pub fn scalar_product(&self, other: Vector) -> i64 {
         self.x() * other.x() + self.y() * other.y() 
     }
 
-    #[inline] pub fn abs(&self) -> f64 {
+     pub fn abs(&self) -> f64 {
         let product = self.scalar_product(self.clone());
         (product as f64).sqrt()
     }
 
-    #[inline] pub fn angle_to(&self, other: Vector) -> f64 {
+     pub fn angle_to(&self, other: Vector) -> f64 {
         let v = self.scalar_product(other.clone()) as f64 / (self.abs() * other.abs());
         v.acos()
     }
 
-    #[inline] pub fn x(&self) -> i64 {
+     pub fn x(&self) -> i64 {
         self.0
     }
 
-    #[inline] pub fn y(&self) -> i64 {
+     pub fn y(&self) -> i64 {
         self.1
     }
 }
@@ -48,36 +48,36 @@ impl Vector {
 pub struct Coordinate(u64, u64);
 
 impl Coordinate {
-    #[inline] pub fn new(x: u64, y: u64) -> Self {
+     pub fn new(x: u64, y: u64) -> Self {
         Self(x, y)
     }
 
-    #[inline] pub fn x(&self) -> u64 {
+     pub fn x(&self) -> u64 {
         self.0
     }
 
-    #[inline] pub fn y(&self) -> u64 {
+     pub fn y(&self) -> u64 {
         self.1
     }
 
-    #[inline] pub fn add(&self, vector: Vector) -> Self {
+     pub fn add(&self, vector: Vector) -> Self {
         Self::new((self.x() as i64 + vector.x()) as u64, 
                   (self.y() as i64 + vector.y()) as u64)
     }
 
-    #[inline] pub fn odd_r_to_doubled(self) -> Self {
+     pub fn odd_r_to_doubled(self) -> Self {
         let x = self.x();
         let y = self.y();
         Self(x * 2 + y % 2, y)
     }
 
-    #[inline] pub fn doubled_to_odd_r(self) -> Self {
+     pub fn doubled_to_odd_r(self) -> Self {
         let x = self.x();
         let y = self.y();
         Self((x as f64 / 2.0).ceil() as u64 - y % 2, y)
     }
 
-    #[inline] pub fn is_valid(&self) -> bool {
+     pub fn is_valid(&self) -> bool {
         let x = self.x();
         let y = self.y();
         x <= RIGHTMOST_X && y < BOARD_HEIGHT && x % 2 == y % 2

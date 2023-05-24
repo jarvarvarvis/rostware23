@@ -16,7 +16,7 @@ pub enum Direction {
 }
 
 impl Direction {
-    #[inline] pub fn vector(&self) -> Vector {
+     pub fn vector(&self) -> Vector {
         match self {
             Self::Left => Vector::new(-FULL_TILE_X_CHANGE, 0),
             Self::TopLeft => Vector::new(-HALF_TILE_X_CHANGE, FULL_TILE_Y_CHANGE),
@@ -33,7 +33,7 @@ pub struct DirectionIterator {
 }
 
 impl DirectionIterator {
-    #[inline] pub fn new() -> Self {
+     pub fn new() -> Self {
         Self { current_direction: Some(Direction::Left) }
     }
 

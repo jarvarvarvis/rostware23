@@ -17,7 +17,7 @@ pub enum FieldState {
 }
 
 impl FieldState {
-    #[inline] pub fn get_fish_count(&self) -> anyhow::Result<u32> {
+     pub fn get_fish_count(&self) -> anyhow::Result<u32> {
         match self {
             FieldState::Empty => Ok(0),
             FieldState::Fish(fish_count) => Ok(*fish_count),

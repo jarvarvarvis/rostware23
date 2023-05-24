@@ -10,28 +10,28 @@ pub struct PenguinCollection {
 
 
 impl PenguinCollection {
-    #[inline] pub fn empty() -> Self {
+     pub fn empty() -> Self {
         Self {
             team_one_penguins: PenguinBitset::empty(),
             team_two_penguins: PenguinBitset::empty()
         }
     }
 
-    #[inline] pub fn add_penguin(&mut self, penguin: Penguin) {
+     pub fn add_penguin(&mut self, penguin: Penguin) {
         match penguin.team {
             Team::One => self.team_one_penguins.add_penguin(penguin),
             Team::Two => self.team_two_penguins.add_penguin(penguin),
         }
     }
 
-    #[inline] pub fn move_penguin(&mut self, penguin: Penguin, to: Coordinate) -> anyhow::Result<()> {
+     pub fn move_penguin(&mut self, penguin: Penguin, to: Coordinate) -> anyhow::Result<()> {
         match penguin.team {
             Team::One => self.team_one_penguins.move_penguin(penguin, to),
             Team::Two => self.team_two_penguins.move_penguin(penguin, to),
         }
     }
 
-    #[inline] pub fn get_penguin(&self, coordinate: Coordinate) -> anyhow::Result<Penguin> {
+     pub fn get_penguin(&self, coordinate: Coordinate) -> anyhow::Result<Penguin> {
         let team_one = self.team_one_penguins.has_penguin_at(coordinate.clone());
         let team_two = self.team_two_penguins.has_penguin_at(coordinate.clone());
 
@@ -44,7 +44,7 @@ impl PenguinCollection {
         }
     }
 
-    #[inline] pub fn get_iter_for_team(&self, team: Team) -> impl Iterator<Item = Penguin> {
+     pub fn get_iter_for_team(&self, team: Team) -> impl Iterator<Item = Penguin> {
         PenguinBitsetIterator::from(match team {
             Team::One => self.team_one_penguins.clone(),
             Team::Two => self.team_two_penguins.clone(),

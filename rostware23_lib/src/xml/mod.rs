@@ -13,12 +13,12 @@ pub mod error;
 use anyhow::Result;
 use instant_xml::{FromXml, ToXml};
 
-#[inline] pub fn deserialize<'de, D: FromXml<'de>>(data: &'de str) -> Result<D> {
+ pub fn deserialize<'de, D: FromXml<'de>>(data: &'de str) -> Result<D> {
     let result = instant_xml::from_str(data)?;
     Ok(result)
 }
 
-#[inline] pub fn serialize<S: ToXml>(data: S) -> Result<String> {
+ pub fn serialize<S: ToXml>(data: S) -> Result<String> {
     let result = instant_xml::to_string(&data)?;
     Ok(result)
 }

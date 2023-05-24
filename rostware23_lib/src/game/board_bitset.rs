@@ -8,11 +8,11 @@ fn get_8x8_coordinate_mask(x: u64, y: u64) -> u64 {
 }
 
 impl Bitset8x8 {
-    #[inline] pub fn empty() -> Self {
+     pub fn empty() -> Self {
         Self { value: 0 }
     }
 
-    #[inline] pub fn get(&self, x: u64, y: u64) -> anyhow::Result<bool> {
+     pub fn get(&self, x: u64, y: u64) -> anyhow::Result<bool> {
         if x >= 8 || y >= 8 {
             anyhow::bail!("Coordinates ({x},{y}) are out of bounds");
         }
@@ -20,7 +20,7 @@ impl Bitset8x8 {
         Ok(self.value & get_8x8_coordinate_mask(x, y) != 0)
     }
 
-    #[inline] pub fn set(&mut self, x: u64, y: u64, new_value: bool) -> anyhow::Result<bool> {
+     pub fn set(&mut self, x: u64, y: u64, new_value: bool) -> anyhow::Result<bool> {
         let old_state = self.get(x, y)?;
         if new_value {
             self.value |= get_8x8_coordinate_mask(x, y);
@@ -30,7 +30,7 @@ impl Bitset8x8 {
         Ok(old_state)
     }
 
-    #[inline] pub fn with_set(&self, x: u64, y: u64, new_value: bool) -> anyhow::Result<Self> {
+     pub fn with_set(&self, x: u64, y: u64, new_value: bool) -> anyhow::Result<Self> {
         let mut new_state = self.clone();
         let _ = new_state.set(x, y, new_value)?;
         Ok(new_state)

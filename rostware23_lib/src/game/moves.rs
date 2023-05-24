@@ -8,7 +8,7 @@ pub enum Move {
 }
 
 impl Move {
-    #[inline] pub fn get_to(&self) -> Coordinate {
+     pub fn get_to(&self) -> Coordinate {
         match self {
             Move::Place(to) => to.clone(),
             Move::Normal { from: _, to } => to.clone(),

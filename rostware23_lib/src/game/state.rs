@@ -17,7 +17,7 @@ pub struct State {
 }
 
 impl State {
-    #[inline] pub fn from_initial_board_with_start_team_one(board: Board) -> Self {
+     pub fn from_initial_board_with_start_team_one(board: Board) -> Self {
         Self {
             turn: 0,
             start_team: Team::One,
@@ -27,7 +27,7 @@ impl State {
         }
     }
 
-    #[inline] pub fn current_team(&self) -> Team {
+     pub fn current_team(&self) -> Team {
         if self.turn % 2 == 0 { 
             self.start_team.clone()
         } else {
@@ -35,17 +35,17 @@ impl State {
         }
     }
 
-    #[inline] pub fn has_team_any_moves(&self, team: Team) -> bool {
+     pub fn has_team_any_moves(&self, team: Team) -> bool {
         PossibleMovesIterator::from_state_and_team(self.clone(), team)
             .next()
             .is_some()
     }
 
-    #[inline] pub fn is_over(&self) -> bool {
+     pub fn is_over(&self) -> bool {
         return !self.has_team_any_moves(Team::One) && !self.has_team_any_moves(Team::Two)
     }
 
-    #[inline] pub fn score_of_team(&self, team: Team) -> u32 {
+     pub fn score_of_team(&self, team: Team) -> u32 {
         match team {
             Team::One => self.team_one_fish,
             Team::Two => self.team_two_fish
@@ -63,7 +63,7 @@ impl State {
         Ok(initial_score)
     }
 
-    #[inline] pub fn perform_move(&mut self, performed_move: Move) -> anyhow::Result<()> {
+     pub fn perform_move(&mut self, performed_move: Move) -> anyhow::Result<()> {
         let new_team_one_score = self.score_for_team_after_move(Team::One, &performed_move)?;
         let new_team_two_score = self.score_for_team_after_move(Team::Two, &performed_move)?;
         let current_team = self.current_team();
@@ -75,21 +75,21 @@ impl State {
         Ok(())
     }
 
-    #[inline] pub fn with_move_performed(&self, performed_move: Move) -> anyhow::Result<Self> {
+     pub fn with_move_performed(&self, performed_move: Move) -> anyhow::Result<Self> {
         let mut self_clone = self.clone();
         self_clone.perform_move(performed_move)?;
         Ok(self_clone)
     }
 
-    #[inline] pub fn possible_moves(&self) -> impl Iterator<Item = Move> {
+     pub fn possible_moves(&self) -> impl Iterator<Item = Move> {
         self.possible_moves_by_move_generator::<PossibleMovesIterator>()
     }
 
-    #[inline] pub fn possible_moves_by_move_generator<Generator: MoveGenerator>(&self) -> impl Iterator<Item = Move> {
+     pub fn possible_moves_by_move_generator<Generator: MoveGenerator>(&self) -> impl Iterator<Item = Move> {
         Generator::get_possible_moves(self.clone())
     }
 
-    #[inline] pub fn with_moveless_player_skipped(&self) -> anyhow::Result<Self> {
+     pub fn with_moveless_player_skipped(&self) -> anyhow::Result<Self> {
         if self.has_team_any_moves(self.current_team()) {
             return Ok(self.clone());
         }
@@ -105,7 +105,7 @@ impl State {
         anyhow::bail!("Can't skip moveless player when nobody has moves");
     }
 
-    #[inline] pub fn get_result(&self) -> anyhow::Result<GameResult> {
+     pub fn get_result(&self) -> anyhow::Result<GameResult> {
         if !self.is_over() {
             anyhow::bail!("The game state is not over yet");
         }

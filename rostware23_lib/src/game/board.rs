@@ -40,7 +40,7 @@ fn get_non_zero_fish_count(field_state: &FieldState) -> bool {
 }
 
 impl Board {
-    #[inline] pub fn empty() -> Self {
+     pub fn empty() -> Self {
         Self {
             if_fish_field_then_fish_count_higher_than_two_otherwise_penguin_team: Bitset8x8::empty(),
             if_fish_field_then_fish_modulo_2_otherwise_penguin_count: Bitset8x8::empty(),
@@ -49,7 +49,7 @@ impl Board {
         }
     }
 
-    #[inline] pub fn fill(field_state: FieldState) -> Self {
+     pub fn fill(field_state: FieldState) -> Self {
         let mut board = Board::empty();
 
         for y in 0..BOARD_HEIGHT {
@@ -61,7 +61,7 @@ impl Board {
         board
     }
 
-    #[inline] pub fn get(&self, at: Coordinate) -> anyhow::Result<FieldState> {
+     pub fn get(&self, at: Coordinate) -> anyhow::Result<FieldState> {
         let x = at.x() / 2;
         let y = at.y();
         let is_fish_field = self.non_zero_fish_count.get(x.into(), y.into())?;
@@ -81,14 +81,14 @@ impl Board {
         Ok(FieldState::Empty)
     }
 
-    #[inline] pub fn can_move_to(&self, to: Coordinate) -> anyhow::Result<bool> {
+     pub fn can_move_to(&self, to: Coordinate) -> anyhow::Result<bool> {
         match self.get(to.clone())? {
             FieldState::Fish(_) => Ok(true),
             _ => Ok(false)
         }
     }
 
-    #[inline] pub fn set(&mut self, at: Coordinate, field_state: FieldState) -> anyhow::Result<()> {
+     pub fn set(&mut self, at: Coordinate, field_state: FieldState) -> anyhow::Result<()> {
         let x = at.x() / 2;
         let y = at.y();
         self.if_fish_field_then_fish_count_higher_than_two_otherwise_penguin_team
@@ -119,20 +119,20 @@ impl Board {
         Ok(())
     }
 
-    #[inline] pub fn perform_move(&mut self, performed_move: Move, team: Team) -> anyhow::Result<()> {
+     pub fn perform_move(&mut self, performed_move: Move, team: Team) -> anyhow::Result<()> {
         match performed_move {
             Move::Place(to) => self.perform_place_move(to, team),
             Move::Normal { from, to } => self.perform_normal_move(from, to, team),
         }
     }
 
-    #[inline] pub fn with_move_performed(&self, performed_move: Move, team: Team) -> anyhow::Result<Self> {
+     pub fn with_move_performed(&self, performed_move: Move, team: Team) -> anyhow::Result<Self> {
         let mut new_state = self.clone();
         new_state.perform_move(performed_move, team)?;
         Ok(new_state)
     }
 
-    #[inline] pub fn get_penguin_iterator(&self, team: Team) -> impl Iterator<Item = Penguin> {
+     pub fn get_penguin_iterator(&self, team: Team) -> impl Iterator<Item = Penguin> {
         self.penguin_collection.get_iter_for_team(team)
     }
 }

@@ -11,7 +11,7 @@ pub const READ_BUFFER_SIZE: usize = 256;
 type ConditionFunction<'a> = &'a dyn Fn(&str) -> bool;
 
 impl Connection {
-    #[inline] pub fn connect(address: &str) -> anyhow::Result<Self> {
+     pub fn connect(address: &str) -> anyhow::Result<Self> {
         let stream = TcpStream::connect(address)?;
         let reader = BufReader::new(stream.try_clone()?);
         let writer = BufWriter::new(stream);
@@ -20,32 +20,32 @@ impl Connection {
         })
     }
 
-    #[inline] pub fn write_buffer(&mut self, buffer: &[u8]) -> anyhow::Result<()> {
+     pub fn write_buffer(&mut self, buffer: &[u8]) -> anyhow::Result<()> {
         self.writer.write(buffer)?;
         Ok(())
     }
 
-    #[inline] pub fn write_string(&mut self, string: String) -> anyhow::Result<()> {
+     pub fn write_string(&mut self, string: String) -> anyhow::Result<()> {
         self.write_buffer(string.as_bytes())?;
         Ok(())
     }
 
-    #[inline] pub fn write_string_slice(&mut self, string: &str) -> anyhow::Result<()> {
+     pub fn write_string_slice(&mut self, string: &str) -> anyhow::Result<()> {
         self.write_buffer(string.as_bytes())?;
         Ok(())
     }
 
-    #[inline] pub fn flush_writer(&mut self) -> anyhow::Result<()> {
+     pub fn flush_writer(&mut self) -> anyhow::Result<()> {
         self.writer.flush()?;
         Ok(())
     }
 
-    #[inline] pub fn read_buffer(&mut self, buffer: &mut [u8]) -> anyhow::Result<usize> {
+     pub fn read_buffer(&mut self, buffer: &mut [u8]) -> anyhow::Result<usize> {
         let amount = self.reader.read(buffer)?;
         Ok(amount)
     }
 
-    #[inline] pub fn read_string_until_condition(
+     pub fn read_string_until_condition(
         &mut self,
         condition_function: ConditionFunction,
     ) -> anyhow::Result<String> {
@@ -62,7 +62,7 @@ impl Connection {
         }
     }
 
-    #[inline] pub fn read_fully_into_string(&mut self) -> anyhow::Result<String> {
+     pub fn read_fully_into_string(&mut self) -> anyhow::Result<String> {
         let received: Vec<u8> = self.reader.fill_buf()?.to_vec();
         self.reader.consume(received.len());
 
