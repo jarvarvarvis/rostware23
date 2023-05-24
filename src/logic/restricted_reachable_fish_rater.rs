@@ -29,8 +29,8 @@ impl RestrictedReachableFishRater {
             if let Ok(fish_count) = fish_count {
                 let new_penguin = Penguin { coordinate, team: penguin.team.clone() };
                 accum 
-                    + Self::get_reachable_fish_from_penguin(new_penguin, penguin_restrictions.clone(), board, checked_field_bitset) 
                     + fish_count as i32
+                    + Self::get_reachable_fish_from_penguin(new_penguin, penguin_restrictions.clone(), board, checked_field_bitset) 
             } else {
                 accum
             }
@@ -53,7 +53,8 @@ impl RestrictedReachableFishRater {
 impl Rater for RestrictedReachableFishRater {
     fn rate(game_state: &State) -> i32 {
         let current_team = game_state.current_team();
-        Self::reachable_fish_count_of_team(game_state, current_team) - Self::reachable_fish_count_of_team(game_state, current_team.opponent())
+        Self::reachable_fish_count_of_team(game_state, current_team) 
+            - Self::reachable_fish_count_of_team(game_state, current_team.opponent())
     }
 }
 
