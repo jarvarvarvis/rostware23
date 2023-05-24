@@ -14,7 +14,14 @@ use super::Rater;
 const INITIAL_LOWER_BOUND: i32 = -1000000;
 const INITIAL_UPPER_BOUND: i32 = -INITIAL_LOWER_BOUND;
 
+const INITIAL_OFFSET: i32 = 12;
+const WIDENING_FACTOR: i32 = 3;
+
 const MAX_DEPTH: i32 = BOARD_WIDTH as i32 * BOARD_HEIGHT as i32;
+
+fn is_in_search_window(value: i32, lower_bound: i32, upper_bound: i32) -> bool {
+    lower_bound < value && value < upper_bound
+}
 
 struct PVSResult {
     best_move: Option<Move>,
@@ -35,31 +42,44 @@ impl<Heuristic: Rater> PVSMoveGetter<Heuristic> {
         Self {phantom: PhantomData, fixed_depth: true}
     }
 
-    fn pvs(game_state: State, depth: i32, lower_bound: i32, upper_bound: i32, time_measurer: &TimeMeasurer) -> anyhow::Result<PVSResult> {
+    fn pvs(game_state: State, depth: i32, mut lower_bound: i32, upper_bound: i32, time_measurer: &TimeMeasurer) -> anyhow::Result<PVSResult> {
         if depth < 0 || game_state.is_over() || !time_measurer.has_time_left() {
             return Ok(PVSResult {
                 best_move: None,
                 rating: Heuristic::rate(&game_state)
             });
         }
+
         let mut possible_moves = game_state.possible_moves_by_move_generator::<OrderedMoveGenerator<FishDifferenceRater>>();
         let mut best_move = possible_moves.next();
-        let mut best_score = lower_bound;
+        let mut best_score;
         match best_move.clone() {
             None => {
-                best_score = -Self::pvs(game_state.with_moveless_player_skipped()?, depth - 1, -upper_bound, -best_score, time_measurer)?.rating;
+                best_score = -Self::pvs(game_state.with_moveless_player_skipped()?, depth - 1, -upper_bound, -lower_bound, time_measurer)?.rating;
+                if best_score > lower_bound && best_score < upper_bound {
+                    lower_bound = best_score;
+                }
             },
             Some(first_move) => {
                 let next_game_state = game_state.with_move_performed(first_move.clone())?;
-                best_score = -Self::pvs(next_game_state, depth - 1, -upper_bound, -best_score, time_measurer)?.rating;
+                best_score = -Self::pvs(next_game_state, depth - 1, -upper_bound, -lower_bound, time_measurer)?.rating;
+                if best_score > lower_bound && best_score < upper_bound {
+                    lower_bound = best_score;
+                }
             }
         }
+
         for current_move in possible_moves {
             let next_game_state = game_state.with_move_performed(current_move.clone())?;
-            let mut current_score: i32 = -Self::pvs(next_game_state.clone(), depth - 1, -best_score - 1, -best_score, time_measurer)?.rating; // zero-window search
+
+            // Zero-window search
+            let mut current_score: i32 = -Self::pvs(next_game_state.clone(), depth - 1, -lower_bound - 1, -lower_bound, time_measurer)?.rating;
             if current_score > lower_bound && current_score < upper_bound {
-                // detailed search if zero-window search passes
-                current_score = -Self::pvs(next_game_state, depth - 1, -upper_bound, -current_score, time_measurer)?.rating;
+                // Detailed search if zero-window search passes
+                current_score = -Self::pvs(next_game_state, depth - 1, -upper_bound, -lower_bound, time_measurer)?.rating;
+                if current_score > lower_bound {
+                    lower_bound = current_score;
+                }
             }
 
             if current_score > best_score {
@@ -70,9 +90,41 @@ impl<Heuristic: Rater> PVSMoveGetter<Heuristic> {
                 }
             }
         }
+
         Ok(PVSResult {
             best_move,
             rating: best_score
+        })
+    }
+
+    fn get_move_for_depth(&self, state: &State, depth: i32, last_rating: i32, time_measurer: &TimeMeasurer) -> anyhow::Result<PVSResult> {
+        let mut offset_lower_bound = -INITIAL_OFFSET;
+        let mut offset_upper_bound = INITIAL_OFFSET;
+        let mut lower_bound = last_rating + offset_lower_bound;
+        let mut upper_bound = last_rating + offset_upper_bound;
+
+        while time_measurer.has_time_left() {
+            let current_result = Self::pvs(state.clone(), depth, lower_bound, upper_bound, time_measurer)?;
+            let current_rating = current_result.rating;
+            if is_in_search_window(current_rating, lower_bound, upper_bound) {
+                println!("Search Window (Depth = {}): [{} {}]", depth, lower_bound, upper_bound);
+                return Ok(current_result);
+            }
+
+            if current_rating <= lower_bound {
+                upper_bound = lower_bound;
+                offset_lower_bound *= WIDENING_FACTOR;
+                lower_bound = last_rating + offset_lower_bound;
+            } else {
+                lower_bound = upper_bound;
+                offset_upper_bound *= WIDENING_FACTOR;
+                upper_bound = last_rating + offset_upper_bound;
+            }
+        }
+
+        Ok(PVSResult {
+            best_move: None,
+            rating: i32::min_value()
         })
     }
 }
@@ -82,16 +134,22 @@ impl<Heuristic: Rater> MoveGetter for PVSMoveGetter<Heuristic> {
         if !state.has_team_any_moves(state.current_team()) {
             anyhow::bail!("MoveGetter invoked without possible moves!");
         }
+        
         if self.fixed_depth {
             return Self::pvs(state.clone(), 1, INITIAL_LOWER_BOUND, INITIAL_UPPER_BOUND, time_measurer).map(|result| result.best_move.unwrap());
         }
+
         let mut depth = 1; // Skipping 0 because the calculation time of 1 is insignificant
         let mut best_move = Some(state.possible_moves().next().unwrap());
+        let mut last_ratings = [Heuristic::rate(state); 2];
         while time_measurer.has_time_left() {
-            let result = Self::pvs(state.clone(), depth, INITIAL_LOWER_BOUND, INITIAL_UPPER_BOUND, time_measurer)?;
-            println!("Found move {:?} with rating {} at depth {}", 
-                     result.best_move, result.rating, depth);
-            best_move = result.best_move;
+            let depth_index = (depth % 2) as usize;
+            let current_result = self.get_move_for_depth(state, depth, last_ratings[depth_index], time_measurer)?;
+            last_ratings[depth_index] = current_result.rating;
+
+            if current_result.best_move.is_none() {
+                continue;
+            }
 
             if !time_measurer.has_time_left() {
                 break;
@@ -100,8 +158,11 @@ impl<Heuristic: Rater> MoveGetter for PVSMoveGetter<Heuristic> {
             if depth >= MAX_DEPTH {
                 break;
             }
+
+            best_move = current_result.best_move;
             depth = depth + 1;
         }
+
         println!("Reached depth: {}", depth);
         best_move.context("No move found")
     }
