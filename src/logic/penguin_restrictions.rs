@@ -3,7 +3,7 @@ use rostware23_lib::game::common::{Coordinate, Vector};
 use rostware23_lib::game::direction::Direction;
 use rostware23_lib::game::penguin::Penguin;
 
-#[derive(Debug, Clone, PartialEq)]
+#[derive(Debug, PartialEq)]
 pub struct PenguinRestriction {
     restricting_penguin_coords: Coordinate,
     direction_to_start_penguin: Direction,

@@ -5,7 +5,7 @@ use rostware23_lib::game::penguin::Penguin;
 
 use super::penguin_restrictions::*;
 
-#[derive(Debug, Clone, PartialEq)]
+#[derive(Debug, PartialEq)]
 pub struct VecPenguinRestrictions {
     restrictions: Vec<PenguinRestriction>
 }

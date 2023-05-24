@@ -8,12 +8,12 @@ use rostware23_lib::xml::common::Team;
 use super::Rater;
 use super::penguin_restrictions::*;
 
-pub struct RestrictedReachableFishRater<Restrictions: PenguinRestrictions + Clone> {
+pub struct RestrictedReachableFishRater<Restrictions: PenguinRestrictions> {
     phantom: PhantomData<Restrictions>
 }
 
-impl<Restrictions: PenguinRestrictions + Clone> RestrictedReachableFishRater<Restrictions> {
-    fn get_reachable_fish_from_penguin(penguin: Penguin, penguin_restrictions: Restrictions, board: &Board, checked_field_bitset: &mut Bitset8x8) -> i32 {
+impl<Restrictions: PenguinRestrictions> RestrictedReachableFishRater<Restrictions> {
+    fn get_reachable_fish_from_penguin(penguin: Penguin, penguin_restrictions: &Restrictions, board: &Board, checked_field_bitset: &mut Bitset8x8) -> i32 {
         let penguin_move_iter = PenguinPossibleMoveIterator::from(penguin.clone(), board.clone());
         penguin_move_iter.fold(0, |accum, current_move| {
             let coordinate = current_move.get_to();
@@ -34,7 +34,7 @@ impl<Restrictions: PenguinRestrictions + Clone> RestrictedReachableFishRater<Res
                 let new_penguin = Penguin { coordinate, team: penguin.team.clone() };
                 accum 
                     + fish_count as i32
-                    + Self::get_reachable_fish_from_penguin(new_penguin, penguin_restrictions.clone(), board, checked_field_bitset) 
+                    + Self::get_reachable_fish_from_penguin(new_penguin, penguin_restrictions, board, checked_field_bitset) 
             } else {
                 accum
             }
@@ -47,13 +47,13 @@ impl<Restrictions: PenguinRestrictions + Clone> RestrictedReachableFishRater<Res
         let penguins = game_state.board.get_penguin_iterator(team);
         for penguin in penguins {
             let penguin_restrictions = Restrictions::for_penguin(&penguin, &game_state.board);
-            total_reachable_fish += Self::get_reachable_fish_from_penguin(penguin, penguin_restrictions, &game_state.board, &mut checked_field_bitset);
+            total_reachable_fish += Self::get_reachable_fish_from_penguin(penguin, &penguin_restrictions, &game_state.board, &mut checked_field_bitset);
         }
         total_reachable_fish
     }
 }
 
-impl<Restrictions: PenguinRestrictions + Clone> Rater for RestrictedReachableFishRater<Restrictions> {
+impl<Restrictions: PenguinRestrictions> Rater for RestrictedReachableFishRater<Restrictions> {
     fn rate(game_state: &State) -> i32 {
         let current_team = game_state.current_team();
         Self::reachable_fish_count_of_team(game_state, current_team) 
