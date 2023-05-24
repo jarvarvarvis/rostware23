@@ -4,7 +4,7 @@ use rostware23_lib::{game::state::State, xml::common::Team};
 
 use super::Rater;
 
-const TOTAL_MAX_PENGUIN_COUNT: usize = 8;
+const EARLY_GAME_MAX_SCORE: u32 = 8;
 
 pub struct EarlyGameRater<Heuristic: Rater> {
     phantom: PhantomData<Heuristic>
@@ -12,10 +12,10 @@ pub struct EarlyGameRater<Heuristic: Rater> {
 
 impl<Heuristic: Rater> Rater for EarlyGameRater<Heuristic> {
     fn rate(state: &State) -> i32 {
-        let team_one_penguins = state.board.get_penguin_iterator(Team::One);
-        let team_two_penguins = state.board.get_penguin_iterator(Team::Two);
-        let penguin_count = team_one_penguins.count() + team_two_penguins.count();
-        if penguin_count < TOTAL_MAX_PENGUIN_COUNT {
+        let team_one_score = state.score_of_team(Team::One);
+        let team_two_score = state.score_of_team(Team::Two);
+        let total_score = team_one_score + team_two_score;
+        if total_score < EARLY_GAME_MAX_SCORE {
             Heuristic::rate(state)
         } else {
             0
