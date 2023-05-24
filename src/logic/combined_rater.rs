@@ -13,7 +13,7 @@ impl Rater for CombinedRater {
     fn rate(state: &State) -> i32 {
         StagedRater::<0, 11, 50, FishDifferenceRater>::rate(state) +
             2 * PotentialFishRater::rate(state) +
-            2 * PenguinCutOffRater::rate(state) +
+            3 * PenguinCutOffRater::rate(state) +
             5 * ReachableFishRater::rate(state) +
             10 * QuadrantOccupationRater::rate(state)
     }
