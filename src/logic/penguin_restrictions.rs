@@ -1,37 +1,35 @@
-use rostware23_lib::game::common::{Coordinate, Vector};
 use rostware23_lib::game::board::Board;
+use rostware23_lib::game::common::{Coordinate, Vector};
 use rostware23_lib::game::direction::{Direction, DirectionIterator};
 use rostware23_lib::game::penguin::Penguin;
 
-#[derive(Debug, Clone, PartialEq, Eq)]
+#[derive(Debug, Clone, PartialEq)]
 pub struct PenguinRestriction {
     restricting_penguin_coords: Coordinate,
-    direction_to_start_penguin: Direction
+    direction_to_start_penguin: Direction,
+    highest_reachable_angle: f64
 }
 
 impl PenguinRestriction {
     pub fn new(restricting_penguin_coords: Coordinate, direction_to_start_penguin: Direction) -> Self { 
-        Self { 
-            restricting_penguin_coords, 
-            direction_to_start_penguin 
-        } 
-    }
-
-    fn highest_reachable_angle() -> f64 {
         let left = Direction::Left.vector();
         let top_right = Direction::TopRight.vector();
-        left.angle_to(top_right)
+        Self { 
+            restricting_penguin_coords, 
+            direction_to_start_penguin,
+            highest_reachable_angle: left.angle_to(top_right)
+        } 
     }
 
     pub fn is_in_restriction(&self, coordinate: Coordinate) -> bool {
         let vector = Vector::between_coordinates(coordinate, self.restricting_penguin_coords.clone());
         let direction_vector = self.direction_to_start_penguin.vector();
         let angle = direction_vector.angle_to(vector);
-        angle >= Self::highest_reachable_angle()
+        angle >= self.highest_reachable_angle
     }
 }
 
-#[derive(Debug, Clone, PartialEq, Eq)]
+#[derive(Debug, Clone, PartialEq)]
 pub struct PenguinRestrictions {
     restrictions: Vec<PenguinRestriction>
 }
@@ -85,7 +83,7 @@ mod tests {
 
     #[test]
     fn highest_reachable_angle_is_correct() {
-        let actual = PenguinRestriction::highest_reachable_angle();
+        let actual = PenguinRestriction::new(Coordinate::new(0, 0), Direction::Left).highest_reachable_angle;
         let degrees: f64 = 135.0;
         assert_eq!(degrees.to_radians(), actual); 
     }
