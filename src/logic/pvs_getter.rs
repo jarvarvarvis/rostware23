@@ -6,6 +6,8 @@ use rostware23_lib::game::moves::Move;
 use rostware23_lib::game::state::State;
 
 use super::MoveGetter;
+use super::fish_difference_rater::FishDifferenceRater;
+use super::ordered_move_generator::OrderedMoveGenerator;
 use super::time_measurer::TimeMeasurer;
 use super::Rater;
 
@@ -40,7 +42,7 @@ impl<Heuristic: Rater> PVSMoveGetter<Heuristic> {
                 rating: Heuristic::rate(&game_state)
             });
         }
-        let mut possible_moves = game_state.possible_moves();
+        let mut possible_moves = game_state.possible_moves_by_move_generator::<OrderedMoveGenerator<FishDifferenceRater>>();
         let mut best_move = possible_moves.next();
         let mut best_score = lower_bound;
         match best_move.clone() {
