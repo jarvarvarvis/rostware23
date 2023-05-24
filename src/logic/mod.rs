@@ -1,5 +1,7 @@
 pub mod battle;
 pub mod time_measurer;
+pub mod ordered_move_generator;
+
 pub mod random_getter;
 pub mod pvs_getter;
 
