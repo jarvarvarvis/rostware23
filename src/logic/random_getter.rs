@@ -18,7 +18,7 @@ impl RandomGetter {
 }
 
 impl MoveGetter for RandomGetter {
-    fn get_move(&self, state: &State, time_measurer: &TimeMeasurer) -> anyhow::Result<Move> {
+    fn get_move(&self, state: &State, _: &TimeMeasurer) -> anyhow::Result<Move> {
         let possible_moves_iter = state.possible_moves();
         let possible_moves: Vec<Move> = possible_moves_iter.collect();
         let chosen_move = possible_moves.choose(&mut rand::thread_rng()).context("No possible moves found")?;
