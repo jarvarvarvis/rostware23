@@ -1,3 +1,5 @@
+use std::fmt::Display;
+
 #[derive(Debug, Clone, PartialEq, Eq)]
 pub struct Bitset8x8 {
     pub value: u64,
@@ -37,6 +39,20 @@ impl Bitset8x8 {
     }
 }
 
+impl Display for Bitset8x8 {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        for y in 0..super::common::BOARD_HEIGHT {
+            for x in 0..super::common::BOARD_WIDTH {
+                let state = self.get(x, y).unwrap_or(false);
+                let identifier = if state { "1" } else { "0" };
+                write!(f, "{}", identifier)?;
+            }
+            writeln!(f)?;
+        }
+        Ok(())
+    }
+}
+
 #[cfg(test)]
 mod tests {
     use super::*;
@@ -71,5 +87,20 @@ mod tests {
                 }
             }
         }
+    }
+
+    #[test]
+    fn display_simple_bitset() {
+        let mut bitset = Bitset8x8::empty();
+        bitset.set(2, 1, true).unwrap();
+        bitset.set(0, 2, true).unwrap();
+        bitset.set(2, 2, true).unwrap();
+        bitset.set(6, 2, true).unwrap();
+        bitset.set(6, 3, true).unwrap();
+        bitset.set(7, 3, true).unwrap();
+        bitset.set(1, 4, true).unwrap();
+        bitset.set(0, 7, true).unwrap();
+        let expected = "00000000\n00100000\n10100010\n00000011\n01000000\n00000000\n00000000\n10000000\n";
+        assert_eq!(expected, format!("{}", bitset));
     }
 }
