@@ -42,10 +42,13 @@ impl Bitset8x8 {
 impl Display for Bitset8x8 {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
         for y in 0..super::common::BOARD_HEIGHT {
+            if y % 2 == 1 {
+                write!(f, " ")?;
+            }
+            
             for x in 0..super::common::BOARD_WIDTH {
                 let state = self.get(x, y).unwrap_or(false);
-                let identifier = if state { "1" } else { "0" };
-                write!(f, "{}", identifier)?;
+                write!(f, "{} ", state as u8)?;
             }
             writeln!(f)?;
         }
@@ -100,7 +103,7 @@ mod tests {
         bitset.set(7, 3, true).unwrap();
         bitset.set(1, 4, true).unwrap();
         bitset.set(0, 7, true).unwrap();
-        let expected = "00000000\n00100000\n10100010\n00000011\n01000000\n00000000\n00000000\n10000000\n";
+        let expected = "0 0 0 0 0 0 0 0 \n 0 0 1 0 0 0 0 0 \n1 0 1 0 0 0 1 0 \n 0 0 0 0 0 0 1 1 \n0 1 0 0 0 0 0 0 \n 0 0 0 0 0 0 0 0 \n0 0 0 0 0 0 0 0 \n 1 0 0 0 0 0 0 0 \n";
         assert_eq!(expected, format!("{}", bitset));
     }
 }
