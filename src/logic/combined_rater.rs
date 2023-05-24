@@ -10,7 +10,7 @@ pub struct CombinedRater {}
 
 impl Rater for CombinedRater {
     fn rate(state: &State) -> i32 {
-        20 * FishDifferenceRater::rate(state) +
+        11 * FishDifferenceRater::rate(state) +
             2 * PotentialFishRater::rate(state) +
             2 * PenguinCutOffRater::rate(state) +
             5 * ReachableFishRater::rate(state) +
