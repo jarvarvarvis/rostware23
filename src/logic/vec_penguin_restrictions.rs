@@ -1,13 +1,16 @@
+use std::fmt::{Debug, Formatter, write};
+use std::mem::MaybeUninit;
 use rostware23_lib::game::board::Board;
 use rostware23_lib::game::common::{Coordinate, Vector};
 use rostware23_lib::game::direction::DirectionIterator;
 use rostware23_lib::game::penguin::Penguin;
+use stackalloc::AVec;
 
 use super::penguin_restrictions::*;
 
 #[derive(Debug, PartialEq)]
 pub struct VecPenguinRestrictions {
-    restrictions: Vec<PenguinRestriction>
+    restrictions: [Option<PenguinRestriction>; 4]
 }
 
 impl VecPenguinRestrictions {
@@ -29,13 +32,20 @@ impl VecPenguinRestrictions {
 impl PenguinRestrictions for VecPenguinRestrictions {
     fn for_penguin(penguin: &Penguin, board: &Board) -> Self {
         let opponent_penguins = board.get_penguin_iterator(penguin.team.opponent());
-        let restrictions = opponent_penguins
-            .filter_map(|opponent_penguin| {
-                let vector_to_opponent = Vector::between_coordinates(opponent_penguin.coordinate.clone(), 
+        let mut restrictions =
+            [Option::<PenguinRestriction>::None, Option::<PenguinRestriction>::None, Option::<PenguinRestriction>::None, Option::<PenguinRestriction>::None];
+        let mut current_index = 0;
+        for opponent_penguin in opponent_penguins {
+            let vector_to_opponent = Vector::between_coordinates(opponent_penguin.coordinate.clone(),
                                                                      penguin.coordinate.clone());
-                Self::find_restriction_for_opponent_penguin(opponent_penguin, vector_to_opponent)
-            })
-            .collect();
+            match Self::find_restriction_for_opponent_penguin(opponent_penguin, vector_to_opponent) {
+                Some(r) => {
+                    restrictions[current_index] = Some(r);
+                    current_index += 1;
+                },
+                None => {},
+            }
+        }
         Self {
             restrictions
         }
@@ -43,8 +53,11 @@ impl PenguinRestrictions for VecPenguinRestrictions {
 
     fn is_restricted(&self, coordinate: Coordinate) -> bool {
         for restriction in self.restrictions.iter() {
-            if restriction.is_in_restriction(coordinate.clone()) {
-                return true;
+            match restriction {
+                Some(r) => if r.is_in_restriction(coordinate.clone()) {
+                    return true;
+                }
+                None => {}
             }
         }
         false
