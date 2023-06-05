@@ -27,6 +27,10 @@ impl TranspositionTable for SimpleTranspositionTable {
             .context(format!("State not present in the transposition table:\n{}", state))
             .map(|value| *value)
     }
+
+    fn is_empty(&self) -> bool {
+        self.entries.is_empty()
+    }
 }
 
 #[cfg(test)]
@@ -89,6 +93,20 @@ mod tests {
         transposition_table.add(state.clone(), 22);
 
         assert_eq!(22, transposition_table.get(&state).unwrap());
+    }
+
+    #[test]
+    fn new_simple_transposition_table_is_empty() {
+        let transposition_table = SimpleTranspositionTable::create_for_depth(0);
+        assert!(transposition_table.is_empty());
+    }
+
+    #[test]
+    fn simple_transposition_table_with_state_added_is_not_empty() {
+        let mut transposition_table = SimpleTranspositionTable::create_for_depth(0);
+        transposition_table.add(State::from_initial_board_with_start_team_one(Board::empty()), 1);
+        assert!(!transposition_table.is_empty());
+
     }
 }
 
