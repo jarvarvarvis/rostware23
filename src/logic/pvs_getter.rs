@@ -55,7 +55,7 @@ impl<Heuristic: Rater> PVSMoveGetter<Heuristic> {
         let mut best_score;
         match best_move.clone() {
             None => {
-                best_score = -Self::pvs(game_state.with_moveless_player_skipped()?, depth - 1, -upper_bound, -lower_bound, time_measurer)?.rating;
+                best_score = -Self::pvs(game_state.with_moveless_player_skipped()?, depth, -upper_bound, -lower_bound, time_measurer)?.rating;
                 if best_score > lower_bound && best_score < upper_bound {
                     lower_bound = best_score;
                 }
@@ -177,9 +177,15 @@ mod tests {
     use rostware23_lib::game::board::*;
 
     use crate::logic::battle::Battle;
+    use crate::logic::bitset_penguin_restrictions::BitsetPenguinRestrictions;
+    use crate::logic::board_parser::parse_board;
     use crate::logic::combined_rater::CombinedRater;
     use crate::logic::fish_difference_rater::FishDifferenceRater;
+    use crate::logic::penguin_cutoff_rater::PenguinCutOffRater;
+    use crate::logic::potential_fish_rater::PotentialFishRater;
+    use crate::logic::quadrant_occupation_rater::QuadrantOccupationRater;
     use crate::logic::random_getter::*;
+    use crate::logic::restricted_reachable_fish_rater::RestrictedReachableFishRater;
 
     #[test]
     fn given_game_state_with_option_of_either_one_or_two_fish_when_calculating_move_with_zero_depth_then_choose_more_fish() {
@@ -286,5 +292,25 @@ mod tests {
         let time_measurer = TimeMeasurer::new_infinite();
         let result_got: PVSResult = PVSMoveGetter::<FishDifferenceRater>::pvs(game_state, 2, INITIAL_LOWER_BOUND, INITIAL_UPPER_BOUND, &time_measurer).unwrap();
         assert_eq!(2, result_got.rating);
+    }
+
+    #[test]
+    fn early_game_cut_off_test() {
+        let board_string = "\
+            = - 4 = 3 -   3\n\
+             = - P 3 G = = -\n\
+             \x20  =   G = = = =\n\
+             -     = - P -  \n\
+             \x20  - -   =     -\n\
+             = = = =     =  \n\
+            - = P G G P - =\n\
+             3   - 3 = 4 - =\n";
+        let board = parse_board(board_string);
+        println!("{}", &board);
+        let game_state = State::from_initial_board_with_start_team_one(board);
+        let pvs_move_getter = PVSMoveGetter::<CombinedRater>::new();
+        let expected_move = Move::Normal{from: Coordinate::new(6, 6), to: Coordinate::new(4, 4) };
+        let move_got = pvs_move_getter.get_move_for_depth(&game_state, 3, 0, &TimeMeasurer::Infinite).unwrap().best_move.unwrap();
+        assert_eq!(expected_move, move_got)
     }
 }

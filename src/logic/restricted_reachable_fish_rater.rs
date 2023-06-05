@@ -2,8 +2,9 @@ use std::marker::PhantomData;
 
 use rostware23_lib::game::board::Board;
 use rostware23_lib::game::board_bitset::Bitset8x8;
+use rostware23_lib::game::direction::DirectionIterator;
 use rostware23_lib::game::state::State;
-use rostware23_lib::game::penguin::{PenguinPossibleMoveIterator, Penguin};
+use rostware23_lib::game::penguin::Penguin;
 use rostware23_lib::xml::common::Team;
 use super::Rater;
 use super::penguin_restrictions::*;
@@ -14,31 +15,39 @@ pub struct RestrictedReachableFishRater<Restrictions: PenguinRestrictions> {
 
 impl<Restrictions: PenguinRestrictions> RestrictedReachableFishRater<Restrictions> {
     fn get_reachable_fish_from_penguin(penguin: Penguin, penguin_restrictions: &Restrictions, board: &Board, checked_field_bitset: &mut Bitset8x8) -> i32 {
-        let penguin_move_iter = PenguinPossibleMoveIterator::from(penguin.clone(), board.clone());
-        penguin_move_iter.fold(0, |accum, current_move| {
-            let coordinate = current_move.get_to();
-            let coordinate_in_bitset = coordinate.clone().doubled_to_odd_r();
-
-            if checked_field_bitset.get(coordinate_in_bitset.x(), coordinate_in_bitset.y()).unwrap() {
-                return accum;
+        let direction_iter = DirectionIterator::new();
+        let coord = penguin.coordinate;
+        let coord8x8 = coord.clone().doubled_to_odd_r();
+        let half_x = coord8x8.x();
+        let y = coord8x8.y();
+        if checked_field_bitset.get(half_x, y).unwrap() {
+            return 0;
+        }
+        if penguin_restrictions.is_restricted(coord.clone()) {
+            return 0;
+        }
+        let mut result = 0;
+        checked_field_bitset.set(half_x, y, true).unwrap();
+        match board.get(coord.clone()).unwrap().get_fish_count() {
+            Ok(fish) => result += fish as i32,
+            Err(_) => {}
+        }
+        for direction in direction_iter {
+            let next_coord = coord.clone().add(direction.vector());
+            if !next_coord.is_valid() {
+                continue;
             }
-            checked_field_bitset.set(coordinate_in_bitset.x(), coordinate_in_bitset.y(), true).unwrap();
-
-            if penguin_restrictions.is_restricted(coordinate.clone()) {
-                return accum;
+            let next_fish = match board.get(next_coord.clone()).unwrap().get_fish_count() {
+                Ok(fish) => fish,
+                Err(_) => 0
+            };
+            if next_fish == 0 {
+                continue;
             }
-            
-            let field_state = board.get(coordinate.clone()).unwrap();
-            let fish_count = field_state.get_fish_count();
-            if let Ok(fish_count) = fish_count {
-                let new_penguin = Penguin { coordinate, team: penguin.team.clone() };
-                accum 
-                    + fish_count as i32
-                    + Self::get_reachable_fish_from_penguin(new_penguin, penguin_restrictions, board, checked_field_bitset) 
-            } else {
-                accum
-            }
-        })
+            let next_penguin = Penguin { coordinate: next_coord, team: penguin.team };
+            result += Self::get_reachable_fish_from_penguin(next_penguin, penguin_restrictions, board, checked_field_bitset);
+        }
+        result
     }
 
     fn reachable_fish_count_of_team(game_state: &State, team: Team) -> i32 {
@@ -68,6 +77,7 @@ mod tests {
     use rostware23_lib::xml::state::FieldState;
 
     use crate::logic::bitset_penguin_restrictions::BitsetPenguinRestrictions;
+    use crate::logic::board_parser::parse_board;
     use crate::logic::vec_penguin_restrictions::VecPenguinRestrictions;
 
     use super::*;
@@ -309,5 +319,21 @@ mod tests {
         let state = State::from_initial_board_with_start_team_one(board);
         let actual = RestrictedReachableFishRater::<BitsetPenguinRestrictions>::rate(&state);
         assert_eq!(13 - 23, actual);
+    }
+
+    #[test]
+    fn given_rather_complex_board_when_rating_for_both_teams_then_returns_correct_value_zero() {
+        let board_string =
+            "4 3 3 =   = = 3\n\
+         - = P = = G - =\n\
+        - = G = - - P -\n\
+         = =     = - = -\n\
+        - = - =     = =\n\
+         - G - - = P = -\n\
+        = - - = = - = -\n\
+         3 = =   = 3 3 4\n";
+        let board = parse_board(board_string);
+        let game_state = State::from_initial_board_with_start_team_one(board);
+        assert_eq!(0, RestrictedReachableFishRater::<BitsetPenguinRestrictions>::rate(&game_state));
     }
 }
