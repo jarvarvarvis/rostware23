@@ -2,7 +2,7 @@ use super::common::*;
 use super::penguin::*;
 use super::penguin_bitset::*;
 
-#[derive(Debug, Clone, PartialEq, Eq)]
+#[derive(Debug, Clone, PartialEq, Eq, Hash)]
 pub struct PenguinCollection {
     team_one_penguins: PenguinBitset,
     team_two_penguins: PenguinBitset,

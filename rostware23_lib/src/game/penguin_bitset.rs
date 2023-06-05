@@ -8,7 +8,7 @@ const PENGUIN_COORD_OFFSET: u64 = 3;
 const PENGUIN_COORDS_BIT_MASK: u64 = 0b111111;
 const PENGUIN_COORD_BIT_MASK: u64 = 0b111;
 
-#[derive(Debug, Clone, PartialEq, Eq)]
+#[derive(Debug, Clone, PartialEq, Eq, Hash)]
 pub struct PenguinBitset {
     value: u64,
 }

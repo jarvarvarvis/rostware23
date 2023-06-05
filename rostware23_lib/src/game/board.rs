@@ -7,7 +7,7 @@ use super::moves::*;
 use super::penguin::*;
 use super::penguin_collection::*;
 
-#[derive(Debug, Clone, PartialEq, Eq)]
+#[derive(Debug, Clone, PartialEq, Eq, Hash)]
 pub struct Board {
     if_fish_field_then_fish_count_higher_than_two_otherwise_penguin_team: Bitset8x8,
     if_fish_field_then_fish_modulo_2_otherwise_penguin_count: Bitset8x8,

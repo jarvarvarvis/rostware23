@@ -7,7 +7,7 @@ use super::result::{GameResult, TeamAndPoints};
 
 use crate::xml;
 
-#[derive(Debug, Clone, PartialEq, Eq)]
+#[derive(Debug, Clone, PartialEq, Eq, Hash)]
 pub struct State {
     pub turn: u32,
     pub start_team: Team,
