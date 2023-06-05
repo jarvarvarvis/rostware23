@@ -31,7 +31,11 @@ impl TranspositionTable for SimpleTranspositionTable {
 
 #[cfg(test)]
 mod tests {
-    use rostware23_lib::{game::{board::Board, common::Coordinate, moves::Move}, xml::{common::Team, state::FieldState}};
+    use rostware23_lib::game::common::Coordinate;
+    use rostware23_lib::game::board::Board;
+    use rostware23_lib::game::moves::Move;
+    use rostware23_lib::xml::common::Team;
+    use rostware23_lib::xml::state::FieldState;
 
     use super::*;
 
