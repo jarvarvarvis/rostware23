@@ -21,6 +21,7 @@ pub mod edge_penguin_penalty;
 pub mod state_selector;
 pub mod transposition_table;
 pub mod simple_transposition_table;
+pub mod selective_transposition_table;
 mod board_parser;
 
 use rostware23_lib::game::state::State;
