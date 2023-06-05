@@ -19,6 +19,7 @@ pub mod quadrant_occupation_rater;
 pub mod penguin_cutoff_rater;
 pub mod edge_penguin_penalty;
 pub mod transposition_table;
+pub mod simple_transposition_table;
 mod board_parser;
 
 use rostware23_lib::game::state::State;
