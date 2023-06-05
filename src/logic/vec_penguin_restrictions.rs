@@ -4,8 +4,6 @@ use rostware23_lib::game::board::Board;
 use rostware23_lib::game::common::{Coordinate, Vector};
 use rostware23_lib::game::direction::DirectionIterator;
 use rostware23_lib::game::penguin::Penguin;
-use stackalloc::AVec;
-
 use super::penguin_restrictions::*;
 
 #[derive(Debug, PartialEq)]
