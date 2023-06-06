@@ -4,6 +4,10 @@ use anyhow::Context;
 use rostware23_lib::game::common::{BOARD_WIDTH, BOARD_HEIGHT};
 use rostware23_lib::game::moves::Move;
 use rostware23_lib::game::state::State;
+use crate::logic::selective_transposition_table::SelectiveTranspositionTable;
+use crate::logic::simple_transposition_table::SimpleTranspositionTable;
+use crate::logic::state_selector::{AnyStateSelector, StateSelector};
+use crate::logic::transposition_table::TranspositionTable;
 
 use super::MoveGetter;
 use super::fish_difference_rater::FishDifferenceRater;
@@ -42,27 +46,34 @@ impl<Heuristic: Rater> PVSMoveGetter<Heuristic> {
         Self {phantom: PhantomData, fixed_depth: true}
     }
 
-    fn pvs(game_state: State, depth: i32, mut lower_bound: i32, upper_bound: i32, time_measurer: &TimeMeasurer) -> anyhow::Result<PVSResult> {
-        if depth < 0 || game_state.is_over() || !time_measurer.has_time_left() {
+    fn pvs(game_state: State, depth: i32, mut lower_bound: i32, upper_bound: i32, time_measurer: &TimeMeasurer, transposition_table: &mut SelectiveTranspositionTable<SimpleTranspositionTable, AnyStateSelector>) -> anyhow::Result<PVSResult> {
+        if transposition_table.contains(&game_state) {
             return Ok(PVSResult {
                 best_move: None,
-                rating: Heuristic::rate(&game_state)
+                rating: transposition_table.get(&game_state)?
+            })
+        }
+        if depth < 0 || game_state.is_over() || !time_measurer.has_time_left() {
+            let rating = Heuristic::rate(&game_state);
+            transposition_table.add(game_state, rating);
+            return Ok(PVSResult {
+                best_move: None,
+                rating
             });
         }
-
         let mut possible_moves = game_state.possible_moves_by_move_generator::<OrderedMoveGenerator<FishDifferenceRater>>();
         let mut best_move = possible_moves.next();
         let mut best_score;
         match best_move.clone() {
             None => {
-                best_score = -Self::pvs(game_state.with_moveless_player_skipped()?, depth, -upper_bound, -lower_bound, time_measurer)?.rating;
+                best_score = -Self::pvs(game_state.with_moveless_player_skipped()?, depth, -upper_bound, -lower_bound, time_measurer, transposition_table)?.rating;
                 if best_score > lower_bound && best_score < upper_bound {
                     lower_bound = best_score;
                 }
             },
             Some(first_move) => {
                 let next_game_state = game_state.with_move_performed(first_move.clone())?;
-                best_score = -Self::pvs(next_game_state, depth - 1, -upper_bound, -lower_bound, time_measurer)?.rating;
+                best_score = -Self::pvs(next_game_state, depth - 1, -upper_bound, -lower_bound, time_measurer, transposition_table)?.rating;
                 if best_score > lower_bound && best_score < upper_bound {
                     lower_bound = best_score;
                 }
@@ -73,10 +84,10 @@ impl<Heuristic: Rater> PVSMoveGetter<Heuristic> {
             let next_game_state = game_state.with_move_performed(current_move.clone())?;
 
             // Zero-window search
-            let mut current_score: i32 = -Self::pvs(next_game_state.clone(), depth - 1, -lower_bound - 1, -lower_bound, time_measurer)?.rating;
+            let mut current_score: i32 = -Self::pvs(next_game_state.clone(), depth - 1, -lower_bound - 1, -lower_bound, time_measurer, transposition_table)?.rating;
             if current_score > lower_bound && current_score < upper_bound {
                 // Detailed search if zero-window search passes
-                current_score = -Self::pvs(next_game_state, depth - 1, -upper_bound, -lower_bound, time_measurer)?.rating;
+                current_score = -Self::pvs(next_game_state, depth - 1, -upper_bound, -lower_bound, time_measurer, transposition_table)?.rating;
                 if current_score > lower_bound {
                     lower_bound = current_score;
                 }
@@ -90,7 +101,9 @@ impl<Heuristic: Rater> PVSMoveGetter<Heuristic> {
                 }
             }
         }
-
+        if best_score >= lower_bound && best_score < upper_bound {
+            transposition_table.add(game_state, best_score);
+        }
         Ok(PVSResult {
             best_move,
             rating: best_score
@@ -102,9 +115,9 @@ impl<Heuristic: Rater> PVSMoveGetter<Heuristic> {
         let mut offset_upper_bound = INITIAL_OFFSET;
         let mut lower_bound = last_rating + offset_lower_bound;
         let mut upper_bound = last_rating + offset_upper_bound;
-
+        let mut transposition_table = SelectiveTranspositionTable::<SimpleTranspositionTable, AnyStateSelector>::create_for_depth(depth);
         while time_measurer.has_time_left() {
-            let current_result = Self::pvs(state.clone(), depth, lower_bound, upper_bound, time_measurer)?;
+            let current_result = Self::pvs(state.clone(), depth, lower_bound, upper_bound, time_measurer, &mut transposition_table)?;
             let current_rating = current_result.rating;
             if is_in_search_window(current_rating, lower_bound, upper_bound) {
                 println!("Search Window (Depth = {}): [{} {}]", depth, lower_bound, upper_bound);
@@ -136,7 +149,8 @@ impl<Heuristic: Rater> MoveGetter for PVSMoveGetter<Heuristic> {
         }
         
         if self.fixed_depth {
-            return Self::pvs(state.clone(), 1, INITIAL_LOWER_BOUND, INITIAL_UPPER_BOUND, time_measurer).map(|result| result.best_move.unwrap());
+            let mut transposition_table = SelectiveTranspositionTable::<SimpleTranspositionTable, AnyStateSelector>::create_for_depth(1);
+            return Self::pvs(state.clone(), 1, INITIAL_LOWER_BOUND, INITIAL_UPPER_BOUND, time_measurer, &mut transposition_table).map(|result| result.best_move.unwrap());
         }
 
         let mut depth = 1; // Skipping 0 because the calculation time of 1 is insignificant
@@ -201,7 +215,8 @@ mod tests {
         let game_state = State::from_initial_board_with_start_team_one(board);
         let expected_move = Move::Normal{from: moving_penguin_coord, to: expected_target};
         let time_measurer = TimeMeasurer::new_infinite();
-        let result_got: PVSResult = PVSMoveGetter::<FishDifferenceRater>::pvs(game_state, 0, INITIAL_LOWER_BOUND, INITIAL_UPPER_BOUND, &time_measurer).unwrap();
+        let mut transposition_table = SelectiveTranspositionTable::<SimpleTranspositionTable, AnyStateSelector>::create_for_depth(0);
+        let result_got: PVSResult = PVSMoveGetter::<FishDifferenceRater>::pvs(game_state, 0, INITIAL_LOWER_BOUND, INITIAL_UPPER_BOUND, &time_measurer, &mut transposition_table).unwrap();
         assert_eq!(expected_move, result_got.best_move.unwrap());
     }
 
@@ -220,7 +235,8 @@ mod tests {
         let game_state = State::from_initial_board_with_start_team_one(board);
         let expected_move = Move::Normal{from: moving_penguin_coord, to: expected_target};
         let time_measurer = TimeMeasurer::new_infinite();
-        let result_got: PVSResult = PVSMoveGetter::<FishDifferenceRater>::pvs(game_state, 0, INITIAL_LOWER_BOUND, INITIAL_UPPER_BOUND, &time_measurer).unwrap();
+        let mut transposition_table = SelectiveTranspositionTable::<SimpleTranspositionTable, AnyStateSelector>::create_for_depth(0);
+        let result_got: PVSResult = PVSMoveGetter::<FishDifferenceRater>::pvs(game_state, 0, INITIAL_LOWER_BOUND, INITIAL_UPPER_BOUND, &time_measurer, &mut transposition_table).unwrap();
         assert_eq!(expected_move, result_got.best_move.unwrap());
     }
 
@@ -255,7 +271,8 @@ mod tests {
         let game_state = create_higher_depth_test_game_state(moving_penguin_coord.clone(), expected_target.clone());
         let expected_move = Move::Normal{from: moving_penguin_coord, to: expected_target};
         let time_measurer = TimeMeasurer::new_infinite();
-        let result_got: PVSResult = PVSMoveGetter::<FishDifferenceRater>::pvs(game_state, 2, INITIAL_LOWER_BOUND, INITIAL_UPPER_BOUND, &time_measurer).unwrap();
+        let mut transposition_table = SelectiveTranspositionTable::<SimpleTranspositionTable, AnyStateSelector>::create_for_depth(2);
+        let result_got: PVSResult = PVSMoveGetter::<FishDifferenceRater>::pvs(game_state, 2, INITIAL_LOWER_BOUND, INITIAL_UPPER_BOUND, &time_measurer, &mut transposition_table).unwrap();
         assert_eq!(expected_move, result_got.best_move.unwrap());
     }
 
@@ -266,7 +283,9 @@ mod tests {
         let game_state = create_higher_depth_test_game_state(moving_penguin_coord.clone(), expected_target.clone());
         let expected_move = Move::Normal{from: moving_penguin_coord, to: expected_target};
         let time_measurer = TimeMeasurer::new_infinite();
-        let result_got: PVSResult = PVSMoveGetter::<FishDifferenceRater>::pvs(game_state, 2, 3, 5, &time_measurer).unwrap();
+        let depth = 2;
+        let mut transposition_table = SelectiveTranspositionTable::<SimpleTranspositionTable, AnyStateSelector>::create_for_depth(depth);
+        let result_got: PVSResult = PVSMoveGetter::<FishDifferenceRater>::pvs(game_state, depth, 3, 5, &time_measurer, &mut transposition_table).unwrap();
         assert_eq!(expected_move, result_got.best_move.unwrap());
     }
 
@@ -276,7 +295,9 @@ mod tests {
         let expected_target = Coordinate::new(10, 0);
         let game_state = create_higher_depth_test_game_state(moving_penguin_coord.clone(), expected_target.clone());
         let time_measurer = TimeMeasurer::new_infinite();
-        let result_got: PVSResult = PVSMoveGetter::<FishDifferenceRater>::pvs(game_state, 2, 0, 2, &time_measurer).unwrap();
+        let depth = 2;
+        let mut transposition_table = SelectiveTranspositionTable::<SimpleTranspositionTable, AnyStateSelector>::create_for_depth(depth);
+        let result_got: PVSResult = PVSMoveGetter::<FishDifferenceRater>::pvs(game_state, depth, 0, 2, &time_measurer, &mut transposition_table).unwrap();
         assert!(2 <= result_got.rating);
     }
 
@@ -290,7 +311,9 @@ mod tests {
         board.set(Coordinate::new(10, 0), FieldState::Fish(2)).unwrap();
         let game_state = State::from_initial_board_with_start_team_one(board);
         let time_measurer = TimeMeasurer::new_infinite();
-        let result_got: PVSResult = PVSMoveGetter::<FishDifferenceRater>::pvs(game_state, 2, INITIAL_LOWER_BOUND, INITIAL_UPPER_BOUND, &time_measurer).unwrap();
+        let depth = 2;
+        let mut transposition_table = SelectiveTranspositionTable::<SimpleTranspositionTable, AnyStateSelector>::create_for_depth(depth);
+        let result_got: PVSResult = PVSMoveGetter::<FishDifferenceRater>::pvs(game_state, depth, INITIAL_LOWER_BOUND, INITIAL_UPPER_BOUND, &time_measurer, &mut transposition_table).unwrap();
         assert_eq!(2, result_got.rating);
     }
 
